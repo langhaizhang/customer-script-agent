@@ -9,7 +9,8 @@ import cozeloop
 import uvicorn
 import time
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse, JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import StateGraph, END
 from langgraph.graph.state import CompiledStateGraph
@@ -20,6 +21,7 @@ from coze_coding_utils.log.write_log import setup_logging, request_context
 from coze_coding_utils.log.config import LOG_LEVEL
 from coze_coding_utils.error.classifier import ErrorClassifier, classify_error
 from coze_coding_utils.helper.stream_runner import AgentStreamRunner, WorkflowStreamRunner,agent_stream_handler,workflow_stream_handler, RunOpt
+import os
 
 setup_logging(
     log_file=LOG_FILE,
@@ -238,6 +240,35 @@ app = FastAPI()
 
 # OpenAI 兼容接口处理器
 openai_handler = OpenAIChatHandler(service)
+
+
+# 版本信息
+VERSION_CONFIG_PATH = os.path.join(os.getenv("COZE_WORKSPACE_PATH", "/workspace/projects"), "config/version.json")
+
+def get_version_info():
+    """获取版本信息"""
+    try:
+        with open(VERSION_CONFIG_PATH, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except:
+        return {"version": "1.0.0", "release_time": "2024-03-16 17:00:00"}
+
+
+@app.get("/version")
+async def get_version():
+    """获取版本信息 API"""
+    return get_version_info()
+
+
+@app.get("/app", response_class=HTMLResponse)
+async def get_frontend():
+    """返回前端页面"""
+    frontend_path = os.path.join(os.getenv("COZE_WORKSPACE_PATH", "/workspace/projects"), "src/frontend/index.html")
+    try:
+        with open(frontend_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Frontend file not found: {str(e)}")
 
 
 HEADER_X_RUN_ID = "x-run-id"
@@ -466,15 +497,20 @@ async def openai_chat_completions(request: Request):
 
 @app.get("/")
 async def root():
-    """欢迎页面"""
+    """欢迎页面 - 重定向到前端应用"""
+    version_info = get_version_info()
     return {
         "name": "客户资源和话术管理智能助手",
         "status": "running",
+        "version": version_info.get("version", "1.0.0"),
+        "release_time": version_info.get("release_time", ""),
         "endpoints": {
+            "frontend": "/app",
             "api_docs": "/docs",
             "health": "/health",
             "chat": "/stream_run",
-            "run": "/run"
+            "run": "/run",
+            "version": "/version"
         },
         "github": "https://github.com/langhaizhang/customer-script-agent"
     }
