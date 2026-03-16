@@ -65,6 +65,13 @@ from tools.document_processing_tool import (
     export_customers_to_json
 )
 
+# 导入智能录入工具
+from tools.smart_input_tool import (
+    parse_text_to_customer,
+    parse_image_to_customer,
+    smart_add_customer
+)
+
 LLM_CONFIG = "config/agent_llm_config.json"
 
 # 默认保留最近 20 轮对话 (40 条消息)
@@ -145,7 +152,12 @@ def build_agent(ctx=None):
         extract_customers_from_document,
         batch_import_customers,
         batch_import_scripts,
-        export_customers_to_json
+        export_customers_to_json,
+        
+        # 智能录入工具
+        parse_text_to_customer,
+        parse_image_to_customer,
+        smart_add_customer
     ]
 
     # 创建 Agent

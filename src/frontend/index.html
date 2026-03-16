@@ -88,8 +88,8 @@
     <script src="https://unpkg.com/echarts@5/dist/echarts.min.js"></script>
     <script>
         const { useState, useEffect, useRef } = React;
-        const VERSION = "1.1.0";
-        const RELEASE_TIME = "2026-03-16 17:30:00";
+        const VERSION = "1.2.0";
+        const RELEASE_TIME = "2026-03-16 18:00:00";
         const API_BASE = window.location.origin;
 
         // 产品列表（默认三个产品）
@@ -130,6 +130,7 @@
                 { key: 'products', label: '产品管理' },
                 { key: 'knowledge', label: '资料库' },
                 { key: 'customers', label: '客户管理' },
+                { key: 'smart_input', label: '智能录入' },
                 { key: 'scripts', label: '话术库' },
                 { key: 'statistics', label: '数据统计' }
             ];
@@ -140,6 +141,7 @@
                     case 'products': return React.createElement(ProductsPage, { products, setCurrentProduct });
                     case 'knowledge': return React.createElement(KnowledgePage, { currentProduct });
                     case 'customers': return React.createElement(CustomersPage, { currentProduct });
+                    case 'smart_input': return React.createElement(SmartInputPage, { currentProduct });
                     case 'scripts': return React.createElement(ScriptsPage, { currentProduct });
                     case 'statistics': return React.createElement(StatisticsPage, { currentProduct });
                     default: return React.createElement(ChatPage, { currentProduct });
@@ -632,6 +634,172 @@
                             )
                         )
                     )
+                )
+            );
+        }
+
+        // 智能录入页面
+        function SmartInputPage({ currentProduct }) {
+            const [inputType, setInputType] = useState('text'); // 'text' 或 'image'
+            const [textContent, setTextContent] = useState('');
+            const [imageUrl, setImageUrl] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [result, setResult] = useState(null);
+
+            const handleParse = async () => {
+                if (inputType === 'text' && !textContent.trim()) {
+                    alert('请输入要解析的文本内容');
+                    return;
+                }
+                if (inputType === 'image' && !imageUrl.trim()) {
+                    alert('请输入图片URL');
+                    return;
+                }
+
+                setLoading(true);
+                setResult(null);
+
+                try {
+                    const prompt = inputType === 'text' 
+                        ? `请帮我从以下文本中提取客户信息并保存到产品ID ${currentProduct}：\n\n${textContent}`
+                        : `请识别这张图片中的客户信息并保存到产品ID ${currentProduct}，图片URL：${imageUrl}`;
+
+                    const response = await fetch(`${API_BASE}/stream_run`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'query',
+                            session_id: 'smart-input-' + Date.now(),
+                            content: { query: { prompt: [{ type: 'text', content: { text: prompt } }] } }
+                        })
+                    });
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let fullResponse = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split('\n');
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(line.slice(6));
+                                    if (data.type === 'answer' && data.content?.answer) {
+                                        fullResponse += data.content.answer;
+                                    }
+                                } catch (e) {}
+                            }
+                        }
+                    }
+
+                    setResult(fullResponse);
+                } catch (error) {
+                    setResult('❌ 解析失败：' + error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'page-header' },
+                    React.createElement('div', { className: 'page-title' }, '智能录入'),
+                    React.createElement('span', { style: { color: '#999', fontSize: '14px' } }, 
+                        '🤖 AI 自动提取客户信息，支持文本解析和图片识别')
+                ),
+                
+                // 功能介绍卡片
+                React.createElement('div', { className: 'card', style: { marginBottom: '24px', background: '#e6f7ff', border: '1px solid #91d5ff' } },
+                    React.createElement('div', { style: { display: 'flex', gap: '24px' } },
+                        React.createElement('div', { style: { flex: 1 } },
+                            React.createElement('div', { style: { fontWeight: 500, marginBottom: '8px', color: '#1890ff' } }, '📝 文本解析'),
+                            React.createElement('div', { style: { fontSize: '13px', color: '#666' } }, 
+                                '粘贴微信对话、邮件内容、会议记录等，AI自动提取客户姓名、公司、电话、邮箱等信息')
+                        ),
+                        React.createElement('div', { style: { flex: 1 } },
+                            React.createElement('div', { style: { fontWeight: 500, marginBottom: '8px', color: '#1890ff' } }, '📷 图片识别'),
+                            React.createElement('div', { style: { fontSize: '13px', color: '#666' } }, 
+                                '上传名片、截图等图片，AI自动识别并提取客户信息（需提供图片URL）')
+                        )
+                    )
+                ),
+
+                // 输入类型切换
+                React.createElement('div', { className: 'card' },
+                    React.createElement('div', { className: 'card-title' }, '选择录入方式'),
+                    React.createElement('div', { style: { display: 'flex', gap: '12px', marginBottom: '20px' } },
+                        React.createElement('button', {
+                            className: 'btn ' + (inputType === 'text' ? 'btn-primary' : 'btn-default'),
+                            onClick: () => { setInputType('text'); setResult(null); }
+                        }, '📝 文本解析'),
+                        React.createElement('button', {
+                            className: 'btn ' + (inputType === 'image' ? 'btn-primary' : 'btn-default'),
+                            onClick: () => { setInputType('image'); setResult(null); }
+                        }, '📷 图片识别')
+                    ),
+
+                    // 文本输入区
+                    inputType === 'text' && React.createElement('div', { className: 'form-item' },
+                        React.createElement('label', { className: 'form-label' }, 
+                            '粘贴文本内容（微信对话、邮件、会议记录等）'),
+                        React.createElement('textarea', {
+                            className: 'form-textarea',
+                            style: { minHeight: '200px' },
+                            placeholder: '示例：\n王总好，我是小张。明天下午方便吗？我们约个时间聊聊。\n好的，下午3点可以，我在科技园A座。电话13800138000。\n好的王总，到时候见。您的邮箱方便留一下吗？\nwang@tech.com',
+                            value: textContent,
+                            onChange: (e) => setTextContent(e.target.value)
+                        })
+                    ),
+
+                    // 图片URL输入区
+                    inputType === 'image' && React.createElement('div', null,
+                        React.createElement('div', { className: 'form-item' },
+                            React.createElement('label', { className: 'form-label' }, '图片URL地址'),
+                            React.createElement('input', {
+                                className: 'form-input',
+                                placeholder: '请输入图片的公开访问URL，如：https://example.com/card.jpg',
+                                value: imageUrl,
+                                onChange: (e) => setImageUrl(e.target.value)
+                            })
+                        ),
+                        React.createElement('div', { style: { 
+                            background: '#fffbe6', 
+                            border: '1px solid #ffe58f', 
+                            borderRadius: '6px', 
+                            padding: '12px', 
+                            marginTop: '12px',
+                            fontSize: '13px',
+                            color: '#666'
+                        } },
+                            '💡 提示：图片必须是公开可访问的URL。支持识别名片、截图、文档图片等。'
+                        )
+                    ),
+
+                    // 解析按钮
+                    React.createElement('div', { style: { marginTop: '20px' } },
+                        React.createElement('button', {
+                            className: 'btn btn-primary',
+                            onClick: handleParse,
+                            disabled: loading,
+                            style: { minWidth: '120px' }
+                        }, loading ? '🤖 AI 解析中...' : '🤖 开始智能解析')
+                    )
+                ),
+
+                // 解析结果
+                result && React.createElement('div', { className: 'card', style: { marginTop: '16px' } },
+                    React.createElement('div', { className: 'card-title' }, '📋 解析结果'),
+                    React.createElement('div', { 
+                        style: { 
+                            whiteSpace: 'pre-wrap', 
+                            lineHeight: '1.8',
+                            background: '#fafafa',
+                            padding: '16px',
+                            borderRadius: '6px'
+                        } 
+                    }, result)
                 )
             );
         }
