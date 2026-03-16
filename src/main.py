@@ -464,6 +464,22 @@ async def openai_chat_completions(request: Request):
         cozeloop.flush()
 
 
+@app.get("/")
+async def root():
+    """欢迎页面"""
+    return {
+        "name": "客户资源和话术管理智能助手",
+        "status": "running",
+        "endpoints": {
+            "api_docs": "/docs",
+            "health": "/health",
+            "chat": "/stream_run",
+            "run": "/run"
+        },
+        "github": "https://github.com/langhaizhang/customer-script-agent"
+    }
+
+
 @app.get("/health")
 async def health_check():
     try:
