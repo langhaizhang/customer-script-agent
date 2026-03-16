@@ -6,6 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from typing import Optional
 import datetime
 
+
 class HealthCheck(Base):
     __tablename__ = 'health_check'
     __table_args__ = (
@@ -16,11 +17,92 @@ class HealthCheck(Base):
     updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(DateTime(True), server_default=text('now()'))
 
 
+class Product(Base):
+    """产品/业务表"""
+    __tablename__ = 'products'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, comment="产品/业务名称")
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="产品/业务描述")
+    icon: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, comment="图标标识")
+    color: Mapped[Optional[str]] = mapped_column(String(20), nullable=True, comment="主题颜色")
+    status: Mapped[str] = mapped_column(
+        String(50), 
+        nullable=False, 
+        server_default="active",
+        comment="状态：active(活跃), inactive(停用)"
+    )
+    settings: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True, comment="产品配置")
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), 
+        server_default=func.now(), 
+        nullable=False,
+        comment="创建时间"
+    )
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime(timezone=True), 
+        onupdate=func.now(), 
+        nullable=True,
+        comment="更新时间"
+    )
+
+    __table_args__ = (
+        Index("ix_products_name", "name"),
+        Index("ix_products_status", "status"),
+    )
+
+
+class KnowledgeBase(Base):
+    """产品/业务资料库"""
+    __tablename__ = 'knowledge_base'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_id: Mapped[int] = mapped_column(
+        Integer, 
+        ForeignKey('products.id', ondelete='CASCADE'),
+        nullable=False,
+        comment="关联产品ID"
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False, comment="资料标题")
+    content: Mapped[str] = mapped_column(Text, nullable=False, comment="资料内容")
+    category: Mapped[str] = mapped_column(
+        String(50), 
+        nullable=False, 
+        server_default="general",
+        comment="资料分类：product_intro(产品介绍), faq(常见问题), competitive(竞品分析), advantage(核心优势), use_case(使用案例), general(通用资料)"
+    )
+    tags: Mapped[Optional[list]] = mapped_column(JSON, nullable=True, comment="标签")
+    source: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, comment="资料来源")
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), 
+        server_default=func.now(), 
+        nullable=False,
+        comment="创建时间"
+    )
+    updated_at: Mapped[Optional[datetime.datetime]] = mapped_column(
+        DateTime(timezone=True), 
+        onupdate=func.now(), 
+        nullable=True,
+        comment="更新时间"
+    )
+
+    __table_args__ = (
+        Index("ix_knowledge_base_product_id", "product_id"),
+        Index("ix_knowledge_base_category", "category"),
+    )
+
+
 class Customer(Base):
     """客户资源表"""
     __tablename__ = 'customers'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_id: Mapped[Optional[int]] = mapped_column(
+        Integer, 
+        ForeignKey('products.id', ondelete='SET NULL'),
+        nullable=True,
+        comment="关联产品ID"
+    )
     name: Mapped[str] = mapped_column(String(255), nullable=False, comment="客户姓名")
     company: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, comment="公司名称")
     phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, comment="联系电话")
@@ -55,6 +137,7 @@ class Customer(Base):
     )
 
     __table_args__ = (
+        Index("ix_customers_product_id", "product_id"),
         Index("ix_customers_name", "name"),
         Index("ix_customers_company", "company"),
         Index("ix_customers_customer_type", "customer_type"),
@@ -66,6 +149,12 @@ class Script(Base):
     __tablename__ = 'scripts'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_id: Mapped[Optional[int]] = mapped_column(
+        Integer, 
+        ForeignKey('products.id', ondelete='SET NULL'),
+        nullable=True,
+        comment="关联产品ID"
+    )
     title: Mapped[str] = mapped_column(String(255), nullable=False, comment="话术标题")
     content: Mapped[str] = mapped_column(Text, nullable=False, comment="话术内容")
     category: Mapped[str] = mapped_column(
@@ -85,6 +174,12 @@ class Script(Base):
         server_default="0",
         comment="使用次数"
     )
+    is_ai_generated: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="false",
+        comment="是否AI生成"
+    )
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), 
         server_default=func.now(), 
@@ -99,9 +194,45 @@ class Script(Base):
     )
 
     __table_args__ = (
+        Index("ix_scripts_product_id", "product_id"),
         Index("ix_scripts_title", "title"),
         Index("ix_scripts_category", "category"),
         Index("ix_scripts_industry", "industry"),
+    )
+
+
+class Conversation(Base):
+    """对话收集表"""
+    __tablename__ = 'conversations'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_id: Mapped[Optional[int]] = mapped_column(
+        Integer, 
+        ForeignKey('products.id', ondelete='SET NULL'),
+        nullable=True,
+        comment="关联产品ID"
+    )
+    customer_id: Mapped[Optional[int]] = mapped_column(
+        Integer, 
+        ForeignKey('customers.id', ondelete='SET NULL'),
+        nullable=True,
+        comment="关联客户ID"
+    )
+    title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, comment="对话标题")
+    content: Mapped[str] = mapped_column(Text, nullable=False, comment="对话内容")
+    analysis: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True, comment="AI分析结果")
+    insights: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="提取的洞察")
+    rating: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, comment="对话评分(1-5)")
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), 
+        server_default=func.now(), 
+        nullable=False,
+        comment="创建时间"
+    )
+
+    __table_args__ = (
+        Index("ix_conversations_product_id", "product_id"),
+        Index("ix_conversations_customer_id", "customer_id"),
     )
 
 
@@ -110,6 +241,7 @@ t_pg_stat_statements = Table(
     Column('userid', OID),
     Column('dbid', OID),
     Column('toplevel', Boolean),
+    Column('queryid', BigInteger),
     Column('queryid', BigInteger),
     Column('query', Text),
     Column('plans', BigInteger),

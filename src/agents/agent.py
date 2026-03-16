@@ -1,6 +1,7 @@
 """
 客户资源和话术管理 Agent
-提供客户资源管理、话术库管理、文档处理等智能化服务
+提供产品管理、客户资源管理、话术库管理、资料库管理、文档处理等智能化服务
+支持多产品/业务线管理
 """
 
 import os
@@ -14,7 +15,27 @@ from langchain_core.messages import AnyMessage
 from coze_coding_utils.runtime_ctx.context import default_headers
 from storage.memory.memory_saver import get_memory_saver
 
-# 导入所有工具
+# 导入产品管理工具
+from tools.product_management_tool import (
+    create_product,
+    query_products,
+    get_product,
+    update_product,
+    delete_product
+)
+
+# 导入资料库管理工具
+from tools.knowledge_base_tool import (
+    add_knowledge,
+    query_knowledge,
+    get_knowledge,
+    update_knowledge,
+    delete_knowledge,
+    get_knowledge_for_script,
+    get_product_knowledge_summary
+)
+
+# 导入客户管理工具
 from tools.customer_management_tool import (
     add_customer,
     query_customers,
@@ -24,6 +45,7 @@ from tools.customer_management_tool import (
     get_customer_statistics
 )
 
+# 导入话术管理工具
 from tools.script_management_tool import (
     add_script,
     query_scripts,
@@ -34,6 +56,7 @@ from tools.script_management_tool import (
     get_script_statistics
 )
 
+# 导入文档处理工具
 from tools.document_processing_tool import (
     parse_document,
     extract_customers_from_document,
@@ -84,6 +107,22 @@ def build_agent(ctx=None):
 
     # 所有工具列表
     all_tools = [
+        # 产品管理工具
+        create_product,
+        query_products,
+        get_product,
+        update_product,
+        delete_product,
+        
+        # 资料库管理工具
+        add_knowledge,
+        query_knowledge,
+        get_knowledge,
+        update_knowledge,
+        delete_knowledge,
+        get_knowledge_for_script,
+        get_product_knowledge_summary,
+        
         # 客户管理工具
         add_customer,
         query_customers,

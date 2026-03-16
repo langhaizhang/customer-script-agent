@@ -5,480 +5,147 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>客户资源和话术管理智能助手</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: #f5f5f5;
-            color: #333;
-        }
-        #root {
-            height: 100vh;
-        }
-        .layout {
-            min-height: 100vh;
-        }
-        .header {
-            background: #fff;
-            padding: 0 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            position: fixed;
-            width: 100%;
-            z-index: 100;
-            height: 56px;
-        }
-        .header-title {
-            font-size: 18px;
-            font-weight: 500;
-            color: #333;
-        }
-        .header-info {
-            font-size: 12px;
-            color: #999;
-        }
-        .sider {
-            background: #fff;
-            position: fixed;
-            left: 0;
-            top: 56px;
-            bottom: 0;
-            width: 200px;
-            box-shadow: 2px 0 8px rgba(0,0,0,0.05);
-            overflow-y: auto;
-        }
-        .sider-menu {
-            padding: 8px 0;
-        }
-        .menu-item {
-            padding: 12px 24px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border-left: 3px solid transparent;
-            color: #666;
-        }
-        .menu-item:hover {
-            background: #f5f5f5;
-            color: #1890ff;
-        }
-        .menu-item.active {
-            background: #e6f7ff;
-            border-left-color: #1890ff;
-            color: #1890ff;
-        }
-        .content-wrapper {
-            margin-left: 200px;
-            padding-top: 56px;
-        }
-        .content {
-            padding: 24px;
-            min-height: calc(100vh - 56px);
-        }
-        .page-header {
-            margin-bottom: 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .page-title {
-            font-size: 20px;
-            font-weight: 500;
-            color: #333;
-        }
-        .card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 16px;
-        }
-        .card-title {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        /* 对话样式 */
-        .chat-container {
-            background: #fff;
-            border-radius: 8px;
-            padding: 24px;
-            height: calc(100vh - 140px);
-            display: flex;
-            flex-direction: column;
-        }
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-            background: #fafafa;
-            border-radius: 8px;
-            margin-bottom: 16px;
-        }
-        .message {
-            margin-bottom: 16px;
-            max-width: 80%;
-        }
-        .message-user {
-            margin-left: auto;
-            text-align: right;
-        }
-        .message-content {
-            display: inline-block;
-            padding: 12px 16px;
-            border-radius: 8px;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            word-break: break-word;
-            text-align: left;
-        }
-        .message-user .message-content {
-            background: #1890ff;
-            color: #fff;
-        }
-        .message-assistant .message-content {
-            background: #fff;
-            color: #333;
-            border: 1px solid #e8e8e8;
-        }
-        .chat-input {
-            display: flex;
-            gap: 12px;
-        }
-        .chat-input textarea {
-            flex: 1;
-            resize: none;
-            padding: 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        .chat-input textarea:focus {
-            border-color: #1890ff;
-        }
-        /* 按钮样式 */
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-        .btn-primary {
-            background: #1890ff;
-            color: #fff;
-        }
-        .btn-primary:hover {
-            background: #40a9ff;
-        }
-        .btn-default {
-            background: #fff;
-            color: #333;
-            border: 1px solid #d9d9d9;
-        }
-        .btn-default:hover {
-            border-color: #1890ff;
-            color: #1890ff;
-        }
-        .btn-danger {
-            color: #ff4d4f;
-        }
-        .btn-danger:hover {
-            color: #ff7875;
-        }
-        .btn-link {
-            background: none;
-            border: none;
-            color: #1890ff;
-            padding: 0 8px;
-        }
-        .btn-link:hover {
-            color: #40a9ff;
-        }
-        /* 表格样式 */
-        .table-wrapper {
-            overflow-x: auto;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 12px 16px;
-            text-align: left;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        th {
-            background: #fafafa;
-            font-weight: 500;
-            color: #666;
-        }
-        tr:hover td {
-            background: #fafafa;
-        }
-        /* 表单样式 */
-        .form-item {
-            margin-bottom: 16px;
-        }
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            color: #666;
-        }
-        .form-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        .form-input:focus {
-            border-color: #1890ff;
-        }
-        .form-select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-            background: #fff;
-            cursor: pointer;
-        }
-        /* 统计卡片 */
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .stat-value {
-            font-size: 28px;
-            font-weight: 600;
-            color: #1890ff;
-        }
-        .stat-label {
-            font-size: 14px;
-            color: #666;
-            margin-top: 8px;
-        }
-        /* 进度条 */
-        .progress-bar {
-            height: 8px;
-            background: #f0f0f0;
-            border-radius: 4px;
-            overflow: hidden;
-            margin: 8px 0;
-        }
-        .progress-fill {
-            height: 100%;
-            background: #1890ff;
-            border-radius: 4px;
-            transition: width 0.3s;
-        }
-        /* 标签 */
-        .tag {
-            display: inline-block;
-            padding: 2px 8px;
-            font-size: 12px;
-            border-radius: 4px;
-            background: #f0f0f0;
-            color: #666;
-        }
-        .tag-success {
-            background: #f6ffed;
-            color: #52c41a;
-        }
-        /* 上传区域 */
-        .upload-area {
-            background: #fff;
-            border-radius: 8px;
-            padding: 48px;
-            text-align: center;
-            border: 2px dashed #d9d9d9;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .upload-area:hover {
-            border-color: #1890ff;
-        }
-        .upload-text {
-            font-size: 16px;
-            color: #666;
-            margin-top: 16px;
-        }
-        /* 筛选栏 */
-        .filter-bar {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-        .filter-select {
-            min-width: 150px;
-            padding: 6px 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-            background: #fff;
-            cursor: pointer;
-        }
-        /* 弹窗 */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.45);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: #fff;
-            border-radius: 8px;
-            padding: 24px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .modal-title {
-            font-size: 16px;
-            font-weight: 500;
-        }
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: #999;
-        }
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 24px;
-            padding-top: 16px;
-            border-top: 1px solid #f0f0f0;
-        }
-        /* 两列布局 */
-        .row {
-            display: flex;
-            gap: 16px;
-        }
-        .col {
-            flex: 1;
-        }
-        /* 空状态 */
-        .empty {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
-        /* 图表容器 */
-        .chart-container {
-            height: 300px;
-        }
-        /* 推荐区域 */
-        .recommend-box {
-            background: #f6ffed;
-            border: 1px solid #b7eb8f;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-        }
-        .recommend-title {
-            font-weight: 500;
-            margin-bottom: 12px;
-        }
-        .recommend-input {
-            display: flex;
-            gap: 12px;
-        }
-        .recommend-input input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            outline: none;
-        }
-        .recommend-input input:focus {
-            border-color: #1890ff;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+        #root { height: 100vh; }
+        .layout { min-height: 100vh; }
+        .header { background: #fff; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); position: fixed; width: 100%; z-index: 100; height: 56px; }
+        .header-title { font-size: 18px; font-weight: 500; }
+        .header-info { font-size: 12px; color: #999; }
+        .sider { background: #fff; position: fixed; left: 0; top: 56px; bottom: 0; width: 200px; box-shadow: 2px 0 8px rgba(0,0,0,0.05); overflow-y: auto; }
+        .sider-menu { padding: 8px 0; }
+        .menu-item { padding: 12px 24px; cursor: pointer; transition: all 0.3s; border-left: 3px solid transparent; color: #666; }
+        .menu-item:hover { background: #f5f5f5; color: #1890ff; }
+        .menu-item.active { background: #e6f7ff; border-left-color: #1890ff; color: #1890ff; }
+        .content-wrapper { margin-left: 200px; padding-top: 56px; }
+        .content { padding: 24px; min-height: calc(100vh - 56px); }
+        .page-header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 20px; font-weight: 500; }
+        .card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; }
+        .card-title { font-size: 16px; font-weight: 500; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .btn-primary { background: #1890ff; color: #fff; }
+        .btn-primary:hover { background: #40a9ff; }
+        .btn-default { background: #fff; color: #333; border: 1px solid #d9d9d9; }
+        .btn-default:hover { border-color: #1890ff; color: #1890ff; }
+        .btn-danger { color: #ff4d4f; }
+        .btn-link { background: none; border: none; color: #1890ff; padding: 0 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        th { background: #fafafa; font-weight: 500; color: #666; }
+        tr:hover td { background: #fafafa; }
+        .form-item { margin-bottom: 16px; }
+        .form-label { display: block; margin-bottom: 8px; color: #666; }
+        .form-input { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; outline: none; }
+        .form-input:focus { border-color: #1890ff; }
+        .form-select { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; background: #fff; }
+        .form-textarea { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; min-height: 100px; resize: vertical; }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .stat-value { font-size: 28px; font-weight: 600; color: #1890ff; }
+        .stat-label { font-size: 14px; color: #666; margin-top: 8px; }
+        .tag { display: inline-block; padding: 2px 8px; font-size: 12px; border-radius: 4px; background: #f0f0f0; color: #666; margin-right: 4px; }
+        .tag-success { background: #f6ffed; color: #52c41a; }
+        .tag-blue { background: #e6f7ff; color: #1890ff; }
+        .tag-orange { background: #fff7e6; color: #fa8c16; }
+        .tag-green { background: #f6ffed; color: #52c41a; }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.45); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #fff; border-radius: 8px; padding: 24px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+        .modal-title { font-size: 16px; font-weight: 500; }
+        .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #999; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #f0f0f0; }
+        .row { display: flex; gap: 16px; }
+        .col { flex: 1; }
+        .empty { text-align: center; padding: 40px; color: #999; }
+        .filter-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .filter-select { min-width: 150px; padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; background: #fff; }
+        .product-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .product-tab { padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.3s; border: 1px solid #d9d9d9; background: #fff; }
+        .product-tab:hover { border-color: #1890ff; color: #1890ff; }
+        .product-tab.active { background: #1890ff; color: #fff; border-color: #1890ff; }
+        .chat-container { background: #fff; border-radius: 8px; padding: 24px; height: calc(100vh - 140px); display: flex; flex-direction: column; }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 16px; background: #fafafa; border-radius: 8px; margin-bottom: 16px; }
+        .message { margin-bottom: 16px; max-width: 80%; }
+        .message-user { margin-left: auto; text-align: right; }
+        .message-content { display: inline-block; padding: 12px 16px; border-radius: 8px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; text-align: left; }
+        .message-user .message-content { background: #1890ff; color: #fff; }
+        .message-assistant .message-content { background: #fff; color: #333; border: 1px solid #e8e8e8; }
+        .chat-input { display: flex; gap: 12px; }
+        .chat-input textarea { flex: 1; resize: none; padding: 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; outline: none; }
+        .chat-input textarea:focus { border-color: #1890ff; }
+        .loading { text-align: center; padding: 20px; color: #999; }
+        .knowledge-item { padding: 12px; border: 1px solid #f0f0f0; border-radius: 6px; margin-bottom: 8px; }
+        .knowledge-item:hover { background: #fafafa; }
+        .knowledge-item-title { font-weight: 500; margin-bottom: 4px; }
+        .knowledge-item-meta { font-size: 12px; color: #999; }
     </style>
 </head>
 <body>
     <div id="root"></div>
-    
-    <!-- React -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- ECharts -->
     <script src="https://unpkg.com/echarts@5/dist/echarts.min.js"></script>
-    
     <script>
         const { useState, useEffect, useRef } = React;
-        
-        // 版本信息
-        const VERSION = "1.0.1";
-        const RELEASE_TIME = "2026-03-16 17:10:00";
-        
-        // API 基础地址
+        const VERSION = "1.1.0";
+        const RELEASE_TIME = "2026-03-16 17:30:00";
         const API_BASE = window.location.origin;
-        
+
+        // 产品列表（默认三个产品）
+        const DEFAULT_PRODUCTS = [
+            { id: 1, name: '产品A', color: '#1890ff' },
+            { id: 2, name: '产品B', color: '#52c41a' },
+            { id: 3, name: '产品C', color: '#fa8c16' }
+        ];
+
+        // 资料分类
+        const KNOWLEDGE_CATEGORIES = {
+            'product_intro': '产品介绍',
+            'faq': '常见问题',
+            'competitive': '竞品分析',
+            'advantage': '核心优势',
+            'use_case': '使用案例',
+            'general': '通用资料'
+        };
+
+        // 话术分类
+        const SCRIPT_CATEGORIES = {
+            'opening': '开场白',
+            'introduction': '产品介绍',
+            'objection': '异议处理',
+            'closing': '成交话术',
+            'follow_up': '跟进话术',
+            'general': '通用话术'
+        };
+
         // 主应用
         function App() {
             const [currentPage, setCurrentPage] = useState('chat');
-            
+            const [currentProduct, setCurrentProduct] = useState(1);
+            const [products] = useState(DEFAULT_PRODUCTS);
+
             const menuItems = [
                 { key: 'chat', label: '智能对话' },
+                { key: 'products', label: '产品管理' },
+                { key: 'knowledge', label: '资料库' },
                 { key: 'customers', label: '客户管理' },
                 { key: 'scripts', label: '话术库' },
-                { key: 'statistics', label: '数据统计' },
-                { key: 'documents', label: '文档处理' }
+                { key: 'statistics', label: '数据统计' }
             ];
-            
+
             const renderContent = () => {
                 switch(currentPage) {
-                    case 'chat': return React.createElement(ChatPage);
-                    case 'customers': return React.createElement(CustomersPage);
-                    case 'scripts': return React.createElement(ScriptsPage);
-                    case 'statistics': return React.createElement(StatisticsPage);
-                    case 'documents': return React.createElement(DocumentsPage);
-                    default: return React.createElement(ChatPage);
+                    case 'chat': return React.createElement(ChatPage, { currentProduct });
+                    case 'products': return React.createElement(ProductsPage, { products, setCurrentProduct });
+                    case 'knowledge': return React.createElement(KnowledgePage, { currentProduct });
+                    case 'customers': return React.createElement(CustomersPage, { currentProduct });
+                    case 'scripts': return React.createElement(ScriptsPage, { currentProduct });
+                    case 'statistics': return React.createElement(StatisticsPage, { currentProduct });
+                    default: return React.createElement(ChatPage, { currentProduct });
                 }
             };
-            
+
             return React.createElement('div', { className: 'layout' },
                 React.createElement('div', { className: 'header' },
                     React.createElement('div', { className: 'header-title' }, '客户资源和话术管理智能助手'),
@@ -500,30 +167,27 @@
                 )
             );
         }
-        
+
         // 智能对话页面
-        function ChatPage() {
+        function ChatPage({ currentProduct }) {
             const [messages, setMessages] = useState([]);
             const [input, setInput] = useState('');
             const [loading, setLoading] = useState(false);
             const messagesEndRef = useRef(null);
-            
+
             const scrollToBottom = () => {
                 messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
             };
-            
-            useEffect(() => {
-                scrollToBottom();
-            }, [messages]);
-            
+
+            useEffect(() => { scrollToBottom(); }, [messages]);
+
             const sendMessage = async () => {
                 if (!input.trim() || loading) return;
-                
                 const userMessage = input.trim();
                 setInput('');
                 setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
                 setLoading(true);
-                
+
                 try {
                     const response = await fetch(`${API_BASE}/stream_run`, {
                         method: 'POST',
@@ -531,25 +195,17 @@
                         body: JSON.stringify({
                             type: 'query',
                             session_id: 'web-' + Date.now(),
-                            content: {
-                                query: {
-                                    prompt: [{ type: 'text', content: { text: userMessage } }]
-                                }
-                            }
+                            content: { query: { prompt: [{ type: 'text', content: { text: userMessage } }] } }
                         })
                     });
-                    
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder();
                     let assistantMessage = '';
-                    
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
-                        
                         const chunk = decoder.decode(value);
                         const lines = chunk.split('\n');
-                        
                         for (const line of lines) {
                             if (line.startsWith('data: ')) {
                                 try {
@@ -559,11 +215,8 @@
                                         setMessages(prev => {
                                             const newMsgs = [...prev];
                                             const lastMsg = newMsgs[newMsgs.length - 1];
-                                            if (lastMsg?.role === 'assistant') {
-                                                lastMsg.content = assistantMessage;
-                                            } else {
-                                                newMsgs.push({ role: 'assistant', content: assistantMessage });
-                                            }
+                                            if (lastMsg?.role === 'assistant') lastMsg.content = assistantMessage;
+                                            else newMsgs.push({ role: 'assistant', content: assistantMessage });
                                             return newMsgs;
                                         });
                                     }
@@ -577,19 +230,16 @@
                     setLoading(false);
                 }
             };
-            
+
             return React.createElement('div', null,
                 React.createElement('div', { className: 'page-header' },
                     React.createElement('div', { className: 'page-title' }, '智能对话')
                 ),
                 React.createElement('div', { className: 'chat-container' },
                     React.createElement('div', { className: 'chat-messages' },
-                        messages.length === 0 && React.createElement('div', { className: 'empty' }, '开始对话吧'),
+                        messages.length === 0 && React.createElement('div', { className: 'empty' }, '开始对话吧，我可以帮您管理客户、话术和资料'),
                         messages.map((msg, idx) =>
-                            React.createElement('div', {
-                                key: idx,
-                                className: 'message' + (msg.role === 'user' ? ' message-user' : ' message-assistant')
-                            },
+                            React.createElement('div', { key: idx, className: 'message' + (msg.role === 'user' ? ' message-user' : ' message-assistant') },
                                 React.createElement('div', { className: 'message-content' }, msg.content)
                             )
                         ),
@@ -597,41 +247,162 @@
                     ),
                     React.createElement('div', { className: 'chat-input' },
                         React.createElement('textarea', {
-                            value: input,
-                            onChange: (e) => setInput(e.target.value),
+                            value: input, onChange: (e) => setInput(e.target.value),
                             placeholder: '请输入您的问题...',
                             rows: 2,
-                            onKeyPress: (e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    sendMessage();
-                                }
-                            }
+                            onKeyPress: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
                         }),
-                        React.createElement('button', {
-                            className: 'btn btn-primary',
-                            onClick: sendMessage,
-                            disabled: loading
-                        }, loading ? '发送中...' : '发送')
+                        React.createElement('button', { className: 'btn btn-primary', onClick: sendMessage, disabled: loading },
+                            loading ? '发送中...' : '发送'
+                        )
                     )
                 )
             );
         }
-        
-        // 客户管理页面
-        function CustomersPage() {
-            const [customers] = useState([]);
+
+        // 产品管理页面
+        function ProductsPage({ products, setCurrentProduct }) {
+            const [productList, setProductList] = useState(products);
             const [modalVisible, setModalVisible] = useState(false);
-            
-            const columns = ['姓名', '公司', '电话', '邮箱', '行业', '类型', '状态', '操作'];
-            
+
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'page-header' },
+                    React.createElement('div', { className: 'page-title' }, '产品管理'),
+                    React.createElement('button', { className: 'btn btn-primary', onClick: () => setModalVisible(true) }, '添加产品')
+                ),
+                React.createElement('div', { className: 'card' },
+                    React.createElement('table', null,
+                        React.createElement('thead', null,
+                            React.createElement('tr', null,
+                                React.createElement('th', null, 'ID'),
+                                React.createElement('th', null, '产品名称'),
+                                React.createElement('th', null, '描述'),
+                                React.createElement('th', null, '状态'),
+                                React.createElement('th', null, '操作')
+                            )
+                        ),
+                        React.createElement('tbody', null,
+                            productList.map(p =>
+                                React.createElement('tr', { key: p.id },
+                                    React.createElement('td', null, p.id),
+                                    React.createElement('td', null,
+                                        React.createElement('span', { style: { color: p.color, fontWeight: 500 } }, p.name)
+                                    ),
+                                    React.createElement('td', null, p.description || '暂无描述'),
+                                    React.createElement('td', null,
+                                        React.createElement('span', { className: 'tag tag-success' }, '活跃')
+                                    ),
+                                    React.createElement('td', null,
+                                        React.createElement('button', { className: 'btn btn-link' }, '编辑'),
+                                        React.createElement('button', { className: 'btn btn-link btn-danger' }, '删除')
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
+                modalVisible && React.createElement(Modal, {
+                    title: '添加产品',
+                    onClose: () => setModalVisible(false),
+                    children: React.createElement(ProductForm, { onClose: () => setModalVisible(false) })
+                })
+            );
+        }
+
+        function ProductForm({ onClose }) {
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '产品名称'),
+                    React.createElement('input', { className: 'form-input', placeholder: '请输入产品名称' })
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '产品描述'),
+                    React.createElement('textarea', { className: 'form-textarea', placeholder: '请输入产品描述' })
+                ),
+                React.createElement('div', { className: 'modal-footer' },
+                    React.createElement('button', { className: 'btn btn-default', onClick: onClose }, '取消'),
+                    React.createElement('button', { className: 'btn btn-primary', onClick: onClose }, '保存')
+                )
+            );
+        }
+
+        // 资料库页面
+        function KnowledgePage({ currentProduct }) {
+            const [knowledge, setKnowledge] = useState([]);
+            const [modalVisible, setModalVisible] = useState(false);
+            const [category, setCategory] = useState('');
+
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'page-header' },
+                    React.createElement('div', { className: 'page-title' }, '资料库'),
+                    React.createElement('button', { className: 'btn btn-primary', onClick: () => setModalVisible(true) }, '添加资料')
+                ),
+                React.createElement('div', { className: 'filter-bar' },
+                    React.createElement('select', { className: 'filter-select', value: category, onChange: (e) => setCategory(e.target.value) },
+                        React.createElement('option', { value: '' }, '全部分类'),
+                        Object.entries(KNOWLEDGE_CATEGORIES).map(([k, v]) =>
+                            React.createElement('option', { key: k, value: k }, v)
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'card' },
+                    knowledge.length === 0 ?
+                        React.createElement('div', { className: 'empty' }, '暂无资料，点击"添加资料"开始添加') :
+                        knowledge.map(k =>
+                            React.createElement('div', { className: 'knowledge-item', key: k.id },
+                                React.createElement('div', { className: 'knowledge-item-title' }, k.title),
+                                React.createElement('div', { className: 'knowledge-item-meta' },
+                                    KNOWLEDGE_CATEGORIES[k.category] + ' | ' + k.created_at
+                                )
+                            )
+                        )
+                ),
+                modalVisible && React.createElement(Modal, {
+                    title: '添加资料',
+                    onClose: () => setModalVisible(false),
+                    children: React.createElement(KnowledgeForm, { onClose: () => setModalVisible(false) })
+                })
+            );
+        }
+
+        function KnowledgeForm({ onClose }) {
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '资料标题'),
+                    React.createElement('input', { className: 'form-input', placeholder: '请输入标题' })
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '分类'),
+                    React.createElement('select', { className: 'form-select' },
+                        Object.entries(KNOWLEDGE_CATEGORIES).map(([k, v]) =>
+                            React.createElement('option', { key: k, value: k }, v)
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '资料内容'),
+                    React.createElement('textarea', { className: 'form-textarea', placeholder: '请输入资料内容', style: { minHeight: '200px' } })
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '标签'),
+                    React.createElement('input', { className: 'form-input', placeholder: '多个标签用逗号分隔' })
+                ),
+                React.createElement('div', { className: 'modal-footer' },
+                    React.createElement('button', { className: 'btn btn-default', onClick: onClose }, '取消'),
+                    React.createElement('button', { className: 'btn btn-primary', onClick: onClose }, '保存')
+                )
+            );
+        }
+
+        // 客户管理页面
+        function CustomersPage({ currentProduct }) {
+            const [customers, setCustomers] = useState([]);
+            const [modalVisible, setModalVisible] = useState(false);
+
             return React.createElement('div', null,
                 React.createElement('div', { className: 'page-header' },
                     React.createElement('div', { className: 'page-title' }, '客户管理'),
-                    React.createElement('button', {
-                        className: 'btn btn-primary',
-                        onClick: () => setModalVisible(true)
-                    }, '添加客户')
+                    React.createElement('button', { className: 'btn btn-primary', onClick: () => setModalVisible(true) }, '添加客户')
                 ),
                 React.createElement('div', { className: 'card' },
                     React.createElement('div', { className: 'filter-bar' },
@@ -640,27 +411,24 @@
                             React.createElement('option', { value: 'potential' }, '潜在客户'),
                             React.createElement('option', { value: 'interested' }, '意向客户'),
                             React.createElement('option', { value: 'converted' }, '成交客户')
-                        ),
-                        React.createElement('select', { className: 'filter-select' },
-                            React.createElement('option', { value: '' }, '全部状态'),
-                            React.createElement('option', { value: 'active' }, '活跃'),
-                            React.createElement('option', { value: 'inactive' }, '不活跃')
-                        ),
-                        React.createElement('button', { className: 'btn btn-default' }, '查询')
+                        )
                     ),
-                    React.createElement('div', { className: 'table-wrapper' },
-                        React.createElement('table', null,
-                            React.createElement('thead', null,
-                                React.createElement('tr', null, columns.map(col =>
-                                    React.createElement('th', { key: col }, col)
-                                ))
-                            ),
-                            React.createElement('tbody', null,
-                                customers.length === 0 ?
-                                React.createElement('tr', null,
-                                    React.createElement('td', { colSpan: 8, style: { textAlign: 'center', color: '#999' } }, '暂无数据')
-                                ) : null
+                    React.createElement('table', null,
+                        React.createElement('thead', null,
+                            React.createElement('tr', null,
+                                React.createElement('th', null, '姓名'),
+                                React.createElement('th', null, '公司'),
+                                React.createElement('th', null, '电话'),
+                                React.createElement('th', null, '类型'),
+                                React.createElement('th', null, '状态'),
+                                React.createElement('th', null, '操作')
                             )
+                        ),
+                        React.createElement('tbody', null,
+                            customers.length === 0 ?
+                                React.createElement('tr', null,
+                                    React.createElement('td', { colSpan: 6, style: { textAlign: 'center', color: '#999' } }, '暂无数据')
+                                ) : null
                         )
                     )
                 ),
@@ -671,8 +439,7 @@
                 })
             );
         }
-        
-        // 客户表单
+
         function CustomerForm({ onClose }) {
             return React.createElement('div', null,
                 React.createElement('div', { className: 'row' },
@@ -718,60 +485,92 @@
                 )
             );
         }
-        
+
         // 话术库页面
-        function ScriptsPage() {
-            const [scripts] = useState([]);
-            
+        function ScriptsPage({ currentProduct }) {
+            const [scripts, setScripts] = useState([]);
+            const [modalVisible, setModalVisible] = useState(false);
+
             return React.createElement('div', null,
                 React.createElement('div', { className: 'page-header' },
                     React.createElement('div', { className: 'page-title' }, '话术库'),
-                    React.createElement('button', { className: 'btn btn-primary' }, '添加话术')
+                    React.createElement('button', { className: 'btn btn-primary', onClick: () => setModalVisible(true) }, '添加话术')
                 ),
-                React.createElement('div', { className: 'recommend-box' },
-                    React.createElement('div', { className: 'recommend-title' }, '智能推荐'),
-                    React.createElement('div', { className: 'recommend-input' },
-                        React.createElement('input', { placeholder: '输入场景描述，如：首次联系互联网行业潜在客户' }),
-                        React.createElement('button', { className: 'btn btn-primary' }, '推荐')
+                React.createElement('div', { className: 'card', style: { marginBottom: '16px' } },
+                    React.createElement('div', { className: 'card-title' }, 'AI话术生成'),
+                    React.createElement('div', { className: 'row' },
+                        React.createElement('input', { className: 'form-input', placeholder: '输入场景描述，如：首次联系互联网行业潜在客户', style: { flex: 1 } }),
+                        React.createElement('button', { className: 'btn btn-primary' }, '生成话术')
                     )
                 ),
                 React.createElement('div', { className: 'card' },
                     React.createElement('div', { className: 'filter-bar' },
                         React.createElement('select', { className: 'filter-select' },
                             React.createElement('option', { value: '' }, '全部分类'),
-                            React.createElement('option', { value: 'opening' }, '开场白'),
-                            React.createElement('option', { value: 'introduction' }, '产品介绍'),
-                            React.createElement('option', { value: 'objection' }, '异议处理')
-                        ),
-                        React.createElement('button', { className: 'btn btn-default' }, '查询')
+                            Object.entries(SCRIPT_CATEGORIES).map(([k, v]) =>
+                                React.createElement('option', { key: k, value: k }, v)
+                            )
+                        )
                     ),
-                    React.createElement('div', { className: 'table-wrapper' },
-                        React.createElement('table', null,
-                            React.createElement('thead', null,
-                                React.createElement('tr', null,
-                                    React.createElement('th', null, '标题'),
-                                    React.createElement('th', null, '分类'),
-                                    React.createElement('th', null, '适用行业'),
-                                    React.createElement('th', null, '评分'),
-                                    React.createElement('th', null, '操作')
-                                )
-                            ),
-                            React.createElement('tbody', null,
-                                scripts.length === 0 ?
+                    React.createElement('table', null,
+                        React.createElement('thead', null,
+                            React.createElement('tr', null,
+                                React.createElement('th', null, '标题'),
+                                React.createElement('th', null, '分类'),
+                                React.createElement('th', null, '评分'),
+                                React.createElement('th', null, '使用次数'),
+                                React.createElement('th', null, '操作')
+                            )
+                        ),
+                        React.createElement('tbody', null,
+                            scripts.length === 0 ?
                                 React.createElement('tr', null,
                                     React.createElement('td', { colSpan: 5, style: { textAlign: 'center', color: '#999' } }, '暂无数据')
                                 ) : null
-                            )
                         )
                     )
+                ),
+                modalVisible && React.createElement(Modal, {
+                    title: '添加话术',
+                    onClose: () => setModalVisible(false),
+                    children: React.createElement(ScriptForm, { onClose: () => setModalVisible(false) })
+                })
+            );
+        }
+
+        function ScriptForm({ onClose }) {
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '话术标题'),
+                    React.createElement('input', { className: 'form-input', placeholder: '请输入标题' })
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '分类'),
+                    React.createElement('select', { className: 'form-select' },
+                        Object.entries(SCRIPT_CATEGORIES).map(([k, v]) =>
+                            React.createElement('option', { key: k, value: k }, v)
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '话术内容'),
+                    React.createElement('textarea', { className: 'form-textarea', placeholder: '请输入话术内容', style: { minHeight: '150px' } })
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '使用场景'),
+                    React.createElement('input', { className: 'form-input', placeholder: '如：首次联系客户' })
+                ),
+                React.createElement('div', { className: 'modal-footer' },
+                    React.createElement('button', { className: 'btn btn-default', onClick: onClose }, '取消'),
+                    React.createElement('button', { className: 'btn btn-primary', onClick: onClose }, '保存')
                 )
             );
         }
-        
+
         // 数据统计页面
-        function StatisticsPage() {
+        function StatisticsPage({ currentProduct }) {
             const chartRef = useRef(null);
-            
+
             useEffect(() => {
                 if (chartRef.current) {
                     const chart = echarts.init(chartRef.current);
@@ -791,7 +590,7 @@
                     });
                 }
             }, []);
-            
+
             return React.createElement('div', null,
                 React.createElement('div', { className: 'page-header' },
                     React.createElement('div', { className: 'page-title' }, '数据统计')
@@ -810,32 +609,25 @@
                         React.createElement('div', { className: 'stat-label' }, '对话次数')
                     ),
                     React.createElement('div', { className: 'stat-card' },
-                        React.createElement('div', { className: 'stat-value' }, '8.5'),
-                        React.createElement('div', { className: 'stat-label' }, '平均评分')
+                        React.createElement('div', { className: 'stat-value' }, '28'),
+                        React.createElement('div', { className: 'stat-label' }, '资料条数')
                     )
                 ),
                 React.createElement('div', { className: 'row' },
                     React.createElement('div', { className: 'col' },
                         React.createElement('div', { className: 'card' },
                             React.createElement('div', { className: 'card-title' }, '客户类型分布'),
-                            React.createElement('div', { ref: chartRef, className: 'chart-container' })
+                            React.createElement('div', { ref: chartRef, style: { height: '300px' } })
                         )
                     ),
                     React.createElement('div', { className: 'col' },
                         React.createElement('div', { className: 'card' },
-                            React.createElement('div', { className: 'card-title' }, '行业分布'),
+                            React.createElement('div', { className: 'card-title' }, '话术分类统计'),
                             React.createElement('div', { style: { padding: '20px 0' } },
-                                React.createElement('div', null, '互联网: 50家'),
-                                React.createElement('div', { className: 'progress-bar' },
-                                    React.createElement('div', { className: 'progress-fill', style: { width: '50%' } })
-                                ),
-                                React.createElement('div', { style: { marginTop: '12px' } }, '金融: 35家'),
-                                React.createElement('div', { className: 'progress-bar' },
-                                    React.createElement('div', { className: 'progress-fill', style: { width: '35%' } })
-                                ),
-                                React.createElement('div', { style: { marginTop: '12px' } }, '制造业: 25家'),
-                                React.createElement('div', { className: 'progress-bar' },
-                                    React.createElement('div', { className: 'progress-fill', style: { width: '25%' } })
+                                Object.entries(SCRIPT_CATEGORIES).map(([k, v]) =>
+                                    React.createElement('div', { key: k, style: { marginBottom: '12px' } },
+                                        v + ': ' + Math.floor(Math.random() * 20 + 5) + ' 条'
+                                    )
                                 )
                             )
                         )
@@ -843,49 +635,7 @@
                 )
             );
         }
-        
-        // 文档处理页面
-        function DocumentsPage() {
-            return React.createElement('div', null,
-                React.createElement('div', { className: 'page-header' },
-                    React.createElement('div', { className: 'page-title' }, '文档处理')
-                ),
-                React.createElement('div', { className: 'card' },
-                    React.createElement('div', { className: 'upload-area' },
-                        React.createElement('div', { className: 'upload-text' },
-                            '点击或拖拽文件到此区域上传'
-                        ),
-                        React.createElement('div', { style: { marginTop: '8px', color: '#999' } },
-                            '支持 Excel / Word / PDF 格式'
-                        )
-                    )
-                ),
-                React.createElement('div', { className: 'card' },
-                    React.createElement('div', { className: 'card-title' }, '上传历史'),
-                    React.createElement('div', { className: 'table-wrapper' },
-                        React.createElement('table', null,
-                            React.createElement('thead', null,
-                                React.createElement('tr', null,
-                                    React.createElement('th', null, '文件名'),
-                                    React.createElement('th', null, '上传时间'),
-                                    React.createElement('th', null, '处理结果'),
-                                    React.createElement('th', null, '状态')
-                                )
-                            ),
-                            React.createElement('tbody', null,
-                                React.createElement('tr', null,
-                                    React.createElement('td', null, '客户列表.xlsx'),
-                                    React.createElement('td', null, '2026-03-16 15:30'),
-                                    React.createElement('td', null, '提取 15 条客户'),
-                                    React.createElement('td', null, React.createElement('span', { className: 'tag tag-success' }, '完成'))
-                                )
-                            )
-                        )
-                    )
-                )
-            );
-        }
-        
+
         // 弹窗组件
         function Modal({ title, children, onClose }) {
             return React.createElement('div', { className: 'modal-overlay', onClick: onClose },
@@ -898,8 +648,7 @@
                 )
             );
         }
-        
-        // 渲染应用
+
         ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
     </script>
 </body>
