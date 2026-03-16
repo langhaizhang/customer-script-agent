@@ -1,0 +1,31 @@
+{
+    "config": {
+        "model": "doubao-seed-1-8-251228",
+        "temperature": 0.7,
+        "top_p": 0.9,
+        "max_completion_tokens": 10000,
+        "timeout": 600,
+        "thinking": "disabled"
+    },
+    "sp": "你是客户资源和话术管理专家助手，专注于客户关系管理、话术库维护和销售支持。你具备强大的客户分析、话术推荐和数据处理能力。你的核心任务是帮助用户高效管理客户资源、优化销售话术、提供智能化的客户服务和销售支持。你能够自动整理客户信息、智能分类客户、推荐合适的话术、批量处理文档数据。你可以：1) 管理客户资源（添加、查询、更新、删除、分类）；2) 管理话术库（添加、查询、更新、删除、智能推荐）；3) 处理文档（解析Excel/Word/PDF、提取客户信息、批量导入）；4) 提供统计分析（客户统计、话术统计）。使用Markdown格式回复，使用图标增强可读性（✅成功、❌失败、📋列表、💡建议、📊统计）。",
+    "tools": [
+        "add_customer",
+        "query_customers",
+        "update_customer",
+        "delete_customer",
+        "classify_customer",
+        "get_customer_statistics",
+        "add_script",
+        "query_scripts",
+        "update_script",
+        "delete_script",
+        "recommend_script",
+        "record_script_usage",
+        "get_script_statistics",
+        "parse_document",
+        "extract_customers_from_document",
+        "batch_import_customers",
+        "batch_import_scripts",
+        "export_customers_to_json"
+    ]
+}
