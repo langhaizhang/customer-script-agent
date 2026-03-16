@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>客户资源和话术管理智能助手</title>
-    <!-- Ant Design CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/antd@5/dist/reset.css">
     <style>
         * {
             margin: 0;
@@ -13,8 +11,9 @@
             box-sizing: border-box;
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
             background: #f5f5f5;
+            color: #333;
         }
         #root {
             height: 100vh;
@@ -28,10 +27,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
             position: fixed;
             width: 100%;
             z-index: 100;
+            height: 56px;
         }
         .header-title {
             font-size: 18px;
@@ -44,33 +44,67 @@
         }
         .sider {
             background: #fff;
-            padding-top: 64px;
             position: fixed;
             left: 0;
-            top: 0;
+            top: 56px;
             bottom: 0;
             width: 200px;
             box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+            overflow-y: auto;
         }
         .sider-menu {
-            border: none;
+            padding: 8px 0;
+        }
+        .menu-item {
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            color: #666;
+        }
+        .menu-item:hover {
+            background: #f5f5f5;
+            color: #1890ff;
+        }
+        .menu-item.active {
+            background: #e6f7ff;
+            border-left-color: #1890ff;
+            color: #1890ff;
         }
         .content-wrapper {
             margin-left: 200px;
-            padding-top: 64px;
+            padding-top: 56px;
         }
         .content {
             padding: 24px;
-            min-height: calc(100vh - 64px);
+            min-height: calc(100vh - 56px);
         }
         .page-header {
             margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .page-title {
             font-size: 20px;
             font-weight: 500;
             color: #333;
         }
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        /* 对话样式 */
         .chat-container {
             background: #fff;
             border-radius: 8px;
@@ -102,6 +136,7 @@
             line-height: 1.6;
             white-space: pre-wrap;
             word-break: break-word;
+            text-align: left;
         }
         .message-user .message-content {
             background: #1890ff;
@@ -111,7 +146,6 @@
             background: #fff;
             color: #333;
             border: 1px solid #e8e8e8;
-            text-align: left;
         }
         .chat-input {
             display: flex;
@@ -120,10 +154,112 @@
         .chat-input textarea {
             flex: 1;
             resize: none;
+            padding: 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
         }
-        .card-grid {
+        .chat-input textarea:focus {
+            border-color: #1890ff;
+        }
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #1890ff;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+        .btn-default {
+            background: #fff;
+            color: #333;
+            border: 1px solid #d9d9d9;
+        }
+        .btn-default:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        .btn-danger {
+            color: #ff4d4f;
+        }
+        .btn-danger:hover {
+            color: #ff7875;
+        }
+        .btn-link {
+            background: none;
+            border: none;
+            color: #1890ff;
+            padding: 0 8px;
+        }
+        .btn-link:hover {
+            color: #40a9ff;
+        }
+        /* 表格样式 */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        th {
+            background: #fafafa;
+            font-weight: 500;
+            color: #666;
+        }
+        tr:hover td {
+            background: #fafafa;
+        }
+        /* 表单样式 */
+        .form-item {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+        }
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .form-input:focus {
+            border-color: #1890ff;
+        }
+        .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            background: #fff;
+            cursor: pointer;
+        }
+        /* 统计卡片 */
+        .stat-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
             margin-bottom: 24px;
         }
@@ -143,12 +279,34 @@
             color: #666;
             margin-top: 8px;
         }
-        .table-card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        /* 进度条 */
+        .progress-bar {
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
         }
+        .progress-fill {
+            height: 100%;
+            background: #1890ff;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        /* 标签 */
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+            background: #f0f0f0;
+            color: #666;
+        }
+        .tag-success {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+        /* 上传区域 */
         .upload-area {
             background: #fff;
             border-radius: 8px;
@@ -166,40 +324,134 @@
             color: #666;
             margin-top: 16px;
         }
-        .loading-spin {
+        /* 筛选栏 */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .filter-select {
+            min-width: 150px;
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            background: #fff;
+            cursor: pointer;
+        }
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.45);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100%;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #fff;
+            border-radius: 8px;
+            padding: 24px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .modal-title {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+        /* 两列布局 */
+        .row {
+            display: flex;
+            gap: 16px;
+        }
+        .col {
+            flex: 1;
+        }
+        /* 空状态 */
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        /* 图表容器 */
+        .chart-container {
+            height: 300px;
+        }
+        /* 推荐区域 */
+        .recommend-box {
+            background: #f6ffed;
+            border: 1px solid #b7eb8f;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .recommend-title {
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+        .recommend-input {
+            display: flex;
+            gap: 12px;
+        }
+        .recommend-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            outline: none;
+        }
+        .recommend-input input:focus {
+            border-color: #1890ff;
         }
     </style>
 </head>
 <body>
     <div id="root"></div>
     
-    <!-- React & ReactDOM -->
-    <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Ant Design -->
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/antd@5/dist/antd.min.js"></script>
+    <!-- React -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
     <!-- ECharts -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <script src="https://unpkg.com/echarts@5/dist/echarts.min.js"></script>
     
-    <!-- Babel for JSX -->
-    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
-    
-    <script type="text/babel">
+    <script>
         const { useState, useEffect, useRef } = React;
-        const { Layout, Menu, Button, Input, Table, Card, Form, Modal, Select, message, Spin, Upload, Progress, Tag, Space, Divider, Row, Col, Statistic, Empty } = antd;
-        const { Header, Sider, Content } = Layout;
-        const { TextArea } = Input;
         
         // 版本信息
-        const VERSION = "1.0.0";
-        const RELEASE_TIME = "2026-03-16 17:04:30";
+        const VERSION = "1.0.1";
+        const RELEASE_TIME = "2026-03-16 17:10:00";
         
         // API 基础地址
         const API_BASE = window.location.origin;
@@ -218,42 +470,34 @@
             
             const renderContent = () => {
                 switch(currentPage) {
-                    case 'chat':
-                        return <ChatPage />;
-                    case 'customers':
-                        return <CustomersPage />;
-                    case 'scripts':
-                        return <ScriptsPage />;
-                    case 'statistics':
-                        return <StatisticsPage />;
-                    case 'documents':
-                        return <DocumentsPage />;
-                    default:
-                        return <ChatPage />;
+                    case 'chat': return React.createElement(ChatPage);
+                    case 'customers': return React.createElement(CustomersPage);
+                    case 'scripts': return React.createElement(ScriptsPage);
+                    case 'statistics': return React.createElement(StatisticsPage);
+                    case 'documents': return React.createElement(DocumentsPage);
+                    default: return React.createElement(ChatPage);
                 }
             };
             
-            return (
-                <div className="layout">
-                    <div className="header">
-                        <div className="header-title">客户资源和话术管理智能助手</div>
-                        <div className="header-info">版本 {VERSION} | {RELEASE_TIME}</div>
-                    </div>
-                    <div className="sider">
-                        <Menu
-                            className="sider-menu"
-                            mode="inline"
-                            selectedKeys={[currentPage]}
-                            items={menuItems}
-                            onClick={(e) => setCurrentPage(e.key)}
-                        />
-                    </div>
-                    <div className="content-wrapper">
-                        <div className="content">
-                            {renderContent()}
-                        </div>
-                    </div>
-                </div>
+            return React.createElement('div', { className: 'layout' },
+                React.createElement('div', { className: 'header' },
+                    React.createElement('div', { className: 'header-title' }, '客户资源和话术管理智能助手'),
+                    React.createElement('div', { className: 'header-info' }, '版本 ' + VERSION + ' | ' + RELEASE_TIME)
+                ),
+                React.createElement('div', { className: 'sider' },
+                    React.createElement('div', { className: 'sider-menu' },
+                        menuItems.map(item =>
+                            React.createElement('div', {
+                                key: item.key,
+                                className: 'menu-item' + (currentPage === item.key ? ' active' : ''),
+                                onClick: () => setCurrentPage(item.key)
+                            }, item.label)
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'content-wrapper' },
+                    React.createElement('div', { className: 'content' }, renderContent())
+                )
             );
         }
         
@@ -328,415 +572,210 @@
                         }
                     }
                 } catch (error) {
-                    message.error('发送失败，请重试');
                     setMessages(prev => [...prev, { role: 'assistant', content: '抱歉，发生了错误，请稍后重试。' }]);
                 } finally {
                     setLoading(false);
                 }
             };
             
-            return (
-                <div>
-                    <div className="page-header">
-                        <div className="page-title">智能对话</div>
-                    </div>
-                    <div className="chat-container">
-                        <div className="chat-messages">
-                            {messages.length === 0 && (
-                                <Empty description="开始对话吧" style={{ marginTop: '100px' }} />
-                            )}
-                            {messages.map((msg, idx) => (
-                                <div key={idx} className={`message ${msg.role === 'user' ? 'message-user' : 'message-assistant'}`}>
-                                    <div className="message-content">{msg.content}</div>
-                                </div>
-                            ))}
-                            <div ref={messagesEndRef} />
-                        </div>
-                        <div className="chat-input">
-                            <TextArea
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="请输入您的问题..."
-                                autoSize={{ minRows: 1, maxRows: 4 }}
-                                onPressEnter={(e) => {
-                                    if (!e.shiftKey) {
-                                        e.preventDefault();
-                                        sendMessage();
-                                    }
-                                }}
-                            />
-                            <Button type="primary" onClick={sendMessage} loading={loading} style={{ height: 'auto' }}>
-                                发送
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'page-header' },
+                    React.createElement('div', { className: 'page-title' }, '智能对话')
+                ),
+                React.createElement('div', { className: 'chat-container' },
+                    React.createElement('div', { className: 'chat-messages' },
+                        messages.length === 0 && React.createElement('div', { className: 'empty' }, '开始对话吧'),
+                        messages.map((msg, idx) =>
+                            React.createElement('div', {
+                                key: idx,
+                                className: 'message' + (msg.role === 'user' ? ' message-user' : ' message-assistant')
+                            },
+                                React.createElement('div', { className: 'message-content' }, msg.content)
+                            )
+                        ),
+                        React.createElement('div', { ref: messagesEndRef })
+                    ),
+                    React.createElement('div', { className: 'chat-input' },
+                        React.createElement('textarea', {
+                            value: input,
+                            onChange: (e) => setInput(e.target.value),
+                            placeholder: '请输入您的问题...',
+                            rows: 2,
+                            onKeyPress: (e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    sendMessage();
+                                }
+                            }
+                        }),
+                        React.createElement('button', {
+                            className: 'btn btn-primary',
+                            onClick: sendMessage,
+                            disabled: loading
+                        }, loading ? '发送中...' : '发送')
+                    )
+                )
             );
         }
         
         // 客户管理页面
         function CustomersPage() {
-            const [customers, setCustomers] = useState([]);
-            const [loading, setLoading] = useState(false);
+            const [customers] = useState([]);
             const [modalVisible, setModalVisible] = useState(false);
-            const [editingCustomer, setEditingCustomer] = useState(null);
-            const [form] = Form.useForm();
             
-            const [filters, setFilters] = useState({
-                customer_type: null,
-                status: null
-            });
+            const columns = ['姓名', '公司', '电话', '邮箱', '行业', '类型', '状态', '操作'];
             
-            const loadCustomers = async () => {
-                setLoading(true);
-                try {
-                    // 通过对话接口查询
-                    const response = await fetch(`${API_BASE}/stream_run`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            type: 'query',
-                            session_id: 'customer-query-' + Date.now(),
-                            content: {
-                                query: {
-                                    prompt: [{ type: 'text', content: { text: '查询所有客户信息' } }]
-                                }
-                            }
-                        })
-                    });
-                    
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    let result = '';
-                    
-                    while (true) {
-                        const { done, value } = await reader.read();
-                        if (done) break;
-                        const chunk = decoder.decode(value);
-                        const lines = chunk.split('\n');
-                        for (const line of lines) {
-                            if (line.startsWith('data: ')) {
-                                try {
-                                    const data = JSON.parse(line.slice(6));
-                                    if (data.type === 'answer' && data.content?.answer) {
-                                        result += data.content.answer;
-                                    }
-                                } catch (e) {}
-                            }
-                        }
-                    }
-                    
-                    // 解析结果（这里简化处理，实际应该从API直接获取JSON）
-                    setCustomers([]);
-                } catch (error) {
-                    message.error('加载失败');
-                } finally {
-                    setLoading(false);
-                }
-            };
-            
-            useEffect(() => {
-                loadCustomers();
-            }, []);
-            
-            const handleAdd = () => {
-                setEditingCustomer(null);
-                form.resetFields();
-                setModalVisible(true);
-            };
-            
-            const handleEdit = (record) => {
-                setEditingCustomer(record);
-                form.setFieldsValue(record);
-                setModalVisible(true);
-            };
-            
-            const handleDelete = async (id) => {
-                Modal.confirm({
-                    title: '确认删除',
-                    content: '删除后无法恢复，确定要删除吗？',
-                    onOk: async () => {
-                        message.success('删除成功');
-                        loadCustomers();
-                    }
-                });
-            };
-            
-            const handleSave = async () => {
-                try {
-                    const values = await form.validateFields();
-                    message.success(editingCustomer ? '修改成功' : '添加成功');
-                    setModalVisible(false);
-                    loadCustomers();
-                } catch (error) {
-                    // 验证失败
-                }
-            };
-            
-            const columns = [
-                { title: '姓名', dataIndex: 'name', key: 'name' },
-                { title: '公司', dataIndex: 'company', key: 'company' },
-                { title: '电话', dataIndex: 'phone', key: 'phone' },
-                { title: '邮箱', dataIndex: 'email', key: 'email' },
-                { title: '行业', dataIndex: 'industry', key: 'industry' },
-                { 
-                    title: '类型', 
-                    dataIndex: 'customer_type', 
-                    key: 'customer_type',
-                    render: (text) => {
-                        const typeMap = { potential: '潜在客户', interested: '意向客户', converted: '成交客户', churned: '流失客户' };
-                        return typeMap[text] || text;
-                    }
-                },
-                { 
-                    title: '状态', 
-                    dataIndex: 'status', 
-                    key: 'status',
-                    render: (text) => {
-                        const statusMap = { active: '活跃', inactive: '不活跃', churned: '流失' };
-                        return statusMap[text] || text;
-                    }
-                },
-                {
-                    title: '操作',
-                    key: 'action',
-                    render: (_, record) => (
-                        <Space>
-                            <Button type="link" onClick={() => handleEdit(record)}>编辑</Button>
-                            <Button type="link" danger onClick={() => handleDelete(record.id)}>删除</Button>
-                        </Space>
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'page-header' },
+                    React.createElement('div', { className: 'page-title' }, '客户管理'),
+                    React.createElement('button', {
+                        className: 'btn btn-primary',
+                        onClick: () => setModalVisible(true)
+                    }, '添加客户')
+                ),
+                React.createElement('div', { className: 'card' },
+                    React.createElement('div', { className: 'filter-bar' },
+                        React.createElement('select', { className: 'filter-select' },
+                            React.createElement('option', { value: '' }, '全部类型'),
+                            React.createElement('option', { value: 'potential' }, '潜在客户'),
+                            React.createElement('option', { value: 'interested' }, '意向客户'),
+                            React.createElement('option', { value: 'converted' }, '成交客户')
+                        ),
+                        React.createElement('select', { className: 'filter-select' },
+                            React.createElement('option', { value: '' }, '全部状态'),
+                            React.createElement('option', { value: 'active' }, '活跃'),
+                            React.createElement('option', { value: 'inactive' }, '不活跃')
+                        ),
+                        React.createElement('button', { className: 'btn btn-default' }, '查询')
+                    ),
+                    React.createElement('div', { className: 'table-wrapper' },
+                        React.createElement('table', null,
+                            React.createElement('thead', null,
+                                React.createElement('tr', null, columns.map(col =>
+                                    React.createElement('th', { key: col }, col)
+                                ))
+                            ),
+                            React.createElement('tbody', null,
+                                customers.length === 0 ?
+                                React.createElement('tr', null,
+                                    React.createElement('td', { colSpan: 8, style: { textAlign: 'center', color: '#999' } }, '暂无数据')
+                                ) : null
+                            )
+                        )
                     )
-                }
-            ];
-            
-            return (
-                <div>
-                    <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="page-title">客户管理</div>
-                        <Button type="primary" onClick={handleAdd}>添加客户</Button>
-                    </div>
-                    <div className="table-card">
-                        <div style={{ marginBottom: 16, display: 'flex', gap: 16 }}>
-                            <Select
-                                placeholder="客户类型"
-                                style={{ width: 150 }}
-                                allowClear
-                                onChange={(v) => setFilters({...filters, customer_type: v})}
-                            >
-                                <Select.Option value="potential">潜在客户</Select.Option>
-                                <Select.Option value="interested">意向客户</Select.Option>
-                                <Select.Option value="converted">成交客户</Select.Option>
-                                <Select.Option value="churned">流失客户</Select.Option>
-                            </Select>
-                            <Select
-                                placeholder="客户状态"
-                                style={{ width: 150 }}
-                                allowClear
-                                onChange={(v) => setFilters({...filters, status: v})}
-                            >
-                                <Select.Option value="active">活跃</Select.Option>
-                                <Select.Option value="inactive">不活跃</Select.Option>
-                                <Select.Option value="churned">流失</Select.Option>
-                            </Select>
-                            <Button onClick={loadCustomers}>查询</Button>
-                        </div>
-                        <Table
-                            columns={columns}
-                            dataSource={customers}
-                            rowKey="id"
-                            loading={loading}
-                            pagination={{ pageSize: 10 }}
-                        />
-                    </div>
-                    
-                    <Modal
-                        title={editingCustomer ? '编辑客户' : '添加客户'}
-                        open={modalVisible}
-                        onOk={handleSave}
-                        onCancel={() => setModalVisible(false)}
-                        width={600}
-                    >
-                        <Form form={form} layout="vertical">
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item name="name" label="姓名" rules={[{ required: true, message: '请输入姓名' }]}>
-                                        <Input placeholder="请输入姓名" />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item name="company" label="公司">
-                                        <Input placeholder="请输入公司名称" />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item name="phone" label="电话">
-                                        <Input placeholder="请输入电话" />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item name="email" label="邮箱">
-                                        <Input placeholder="请输入邮箱" />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item name="industry" label="行业">
-                                        <Input placeholder="请输入行业" />
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item name="customer_type" label="客户类型" initialValue="potential">
-                                        <Select>
-                                            <Select.Option value="potential">潜在客户</Select.Option>
-                                            <Select.Option value="interested">意向客户</Select.Option>
-                                            <Select.Option value="converted">成交客户</Select.Option>
-                                            <Select.Option value="churned">流失客户</Select.Option>
-                                        </Select>
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                            <Form.Item name="notes" label="备注">
-                                <TextArea rows={3} placeholder="请输入备注信息" />
-                            </Form.Item>
-                        </Form>
-                    </Modal>
-                </div>
+                ),
+                modalVisible && React.createElement(Modal, {
+                    title: '添加客户',
+                    onClose: () => setModalVisible(false),
+                    children: React.createElement(CustomerForm, { onClose: () => setModalVisible(false) })
+                })
+            );
+        }
+        
+        // 客户表单
+        function CustomerForm({ onClose }) {
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'row' },
+                    React.createElement('div', { className: 'col' },
+                        React.createElement('div', { className: 'form-item' },
+                            React.createElement('label', { className: 'form-label' }, '姓名'),
+                            React.createElement('input', { className: 'form-input', placeholder: '请输入姓名' })
+                        )
+                    ),
+                    React.createElement('div', { className: 'col' },
+                        React.createElement('div', { className: 'form-item' },
+                            React.createElement('label', { className: 'form-label' }, '公司'),
+                            React.createElement('input', { className: 'form-input', placeholder: '请输入公司' })
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'row' },
+                    React.createElement('div', { className: 'col' },
+                        React.createElement('div', { className: 'form-item' },
+                            React.createElement('label', { className: 'form-label' }, '电话'),
+                            React.createElement('input', { className: 'form-input', placeholder: '请输入电话' })
+                        )
+                    ),
+                    React.createElement('div', { className: 'col' },
+                        React.createElement('div', { className: 'form-item' },
+                            React.createElement('label', { className: 'form-label' }, '邮箱'),
+                            React.createElement('input', { className: 'form-input', placeholder: '请输入邮箱' })
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '客户类型'),
+                    React.createElement('select', { className: 'form-select' },
+                        React.createElement('option', { value: 'potential' }, '潜在客户'),
+                        React.createElement('option', { value: 'interested' }, '意向客户'),
+                        React.createElement('option', { value: 'converted' }, '成交客户'),
+                        React.createElement('option', { value: 'churned' }, '流失客户')
+                    )
+                ),
+                React.createElement('div', { className: 'modal-footer' },
+                    React.createElement('button', { className: 'btn btn-default', onClick: onClose }, '取消'),
+                    React.createElement('button', { className: 'btn btn-primary', onClick: onClose }, '保存')
+                )
             );
         }
         
         // 话术库页面
         function ScriptsPage() {
-            const [scripts, setScripts] = useState([]);
-            const [loading, setLoading] = useState(false);
-            const [recommendInput, setRecommendInput] = useState('');
-            const [recommendResults, setRecommendResults] = useState([]);
-            const [modalVisible, setModalVisible] = useState(false);
-            const [form] = Form.useForm();
+            const [scripts] = useState([]);
             
-            const columns = [
-                { title: '标题', dataIndex: 'title', key: 'title' },
-                { title: '分类', dataIndex: 'category', key: 'category' },
-                { title: '适用行业', dataIndex: 'industry', key: 'industry' },
-                { 
-                    title: '评分', 
-                    dataIndex: 'effectiveness_score', 
-                    key: 'effectiveness_score',
-                    render: (score) => score ? `${score} 分` : '未评分'
-                },
-                { title: '使用次数', dataIndex: 'usage_count', key: 'usage_count' },
-                {
-                    title: '操作',
-                    key: 'action',
-                    render: (_, record) => (
-                        <Space>
-                            <Button type="link">查看</Button>
-                            <Button type="link">编辑</Button>
-                            <Button type="link" danger>删除</Button>
-                        </Space>
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'page-header' },
+                    React.createElement('div', { className: 'page-title' }, '话术库'),
+                    React.createElement('button', { className: 'btn btn-primary' }, '添加话术')
+                ),
+                React.createElement('div', { className: 'recommend-box' },
+                    React.createElement('div', { className: 'recommend-title' }, '智能推荐'),
+                    React.createElement('div', { className: 'recommend-input' },
+                        React.createElement('input', { placeholder: '输入场景描述，如：首次联系互联网行业潜在客户' }),
+                        React.createElement('button', { className: 'btn btn-primary' }, '推荐')
                     )
-                }
-            ];
-            
-            const handleRecommend = async () => {
-                if (!recommendInput.trim()) return;
-                message.info('正在推荐话术...');
-                // 调用推荐接口
-            };
-            
-            return (
-                <div>
-                    <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div className="page-title">话术库</div>
-                        <Button type="primary" onClick={() => setModalVisible(true)}>添加话术</Button>
-                    </div>
-                    
-                    <Card style={{ marginBottom: 24 }}>
-                        <div style={{ marginBottom: 8, fontWeight: 500 }}>智能推荐</div>
-                        <div style={{ display: 'flex', gap: 12 }}>
-                            <Input
-                                placeholder="输入场景描述，如：首次联系互联网行业潜在客户"
-                                value={recommendInput}
-                                onChange={(e) => setRecommendInput(e.target.value)}
-                                style={{ flex: 1 }}
-                            />
-                            <Button type="primary" onClick={handleRecommend}>推荐</Button>
-                        </div>
-                    </Card>
-                    
-                    <div className="table-card">
-                        <div style={{ marginBottom: 16, display: 'flex', gap: 16 }}>
-                            <Select placeholder="分类" style={{ width: 150 }} allowClear>
-                                <Select.Option value="opening">开场白</Select.Option>
-                                <Select.Option value="introduction">产品介绍</Select.Option>
-                                <Select.Option value="objection">异议处理</Select.Option>
-                                <Select.Option value="closing">成交话术</Select.Option>
-                                <Select.Option value="follow_up">跟进话术</Select.Option>
-                            </Select>
-                            <Button>查询</Button>
-                        </div>
-                        <Table
-                            columns={columns}
-                            dataSource={scripts}
-                            rowKey="id"
-                            loading={loading}
-                            pagination={{ pageSize: 10 }}
-                        />
-                    </div>
-                    
-                    <Modal
-                        title="添加话术"
-                        open={modalVisible}
-                        onOk={() => { message.success('添加成功'); setModalVisible(false); }}
-                        onCancel={() => setModalVisible(false)}
-                        width={700}
-                    >
-                        <Form form={form} layout="vertical">
-                            <Form.Item name="title" label="标题" rules={[{ required: true }]}>
-                                <Input placeholder="请输入话术标题" />
-                            </Form.Item>
-                            <Form.Item name="content" label="内容" rules={[{ required: true }]}>
-                                <TextArea rows={4} placeholder="请输入话术内容" />
-                            </Form.Item>
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item name="category" label="分类" initialValue="general">
-                                        <Select>
-                                            <Select.Option value="opening">开场白</Select.Option>
-                                            <Select.Option value="introduction">产品介绍</Select.Option>
-                                            <Select.Option value="objection">异议处理</Select.Option>
-                                            <Select.Option value="closing">成交话术</Select.Option>
-                                            <Select.Option value="follow_up">跟进话术</Select.Option>
-                                            <Select.Option value="general">通用话术</Select.Option>
-                                        </Select>
-                                    </Form.Item>
-                                </Col>
-                                <Col span={12}>
-                                    <Form.Item name="industry" label="适用行业">
-                                        <Input placeholder="请输入适用行业" />
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                            <Form.Item name="scenario" label="使用场景">
-                                <Input placeholder="请输入使用场景" />
-                            </Form.Item>
-                        </Form>
-                    </Modal>
-                </div>
+                ),
+                React.createElement('div', { className: 'card' },
+                    React.createElement('div', { className: 'filter-bar' },
+                        React.createElement('select', { className: 'filter-select' },
+                            React.createElement('option', { value: '' }, '全部分类'),
+                            React.createElement('option', { value: 'opening' }, '开场白'),
+                            React.createElement('option', { value: 'introduction' }, '产品介绍'),
+                            React.createElement('option', { value: 'objection' }, '异议处理')
+                        ),
+                        React.createElement('button', { className: 'btn btn-default' }, '查询')
+                    ),
+                    React.createElement('div', { className: 'table-wrapper' },
+                        React.createElement('table', null,
+                            React.createElement('thead', null,
+                                React.createElement('tr', null,
+                                    React.createElement('th', null, '标题'),
+                                    React.createElement('th', null, '分类'),
+                                    React.createElement('th', null, '适用行业'),
+                                    React.createElement('th', null, '评分'),
+                                    React.createElement('th', null, '操作')
+                                )
+                            ),
+                            React.createElement('tbody', null,
+                                scripts.length === 0 ?
+                                React.createElement('tr', null,
+                                    React.createElement('td', { colSpan: 5, style: { textAlign: 'center', color: '#999' } }, '暂无数据')
+                                ) : null
+                            )
+                        )
+                    )
+                )
             );
         }
         
         // 数据统计页面
         function StatisticsPage() {
             const chartRef = useRef(null);
-            const chartInstance = useRef(null);
             
             useEffect(() => {
-                if (chartRef.current && !chartInstance.current) {
-                    chartInstance.current = echarts.init(chartRef.current);
-                    chartInstance.current.setOption({
+                if (chartRef.current) {
+                    const chart = echarts.init(chartRef.current);
+                    chart.setOption({
                         tooltip: { trigger: 'item' },
                         legend: { bottom: 0 },
                         series: [{
@@ -753,116 +792,115 @@
                 }
             }, []);
             
-            return (
-                <div>
-                    <div className="page-header">
-                        <div className="page-title">数据统计</div>
-                    </div>
-                    
-                    <div className="card-grid">
-                        <div className="stat-card">
-                            <div className="stat-value">156</div>
-                            <div className="stat-label">客户总数</div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-value">45</div>
-                            <div className="stat-label">话术总数</div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-value">320</div>
-                            <div className="stat-label">对话次数</div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-value">8.5</div>
-                            <div className="stat-label">平均话术评分</div>
-                        </div>
-                    </div>
-                    
-                    <Row gutter={24}>
-                        <Col span={12}>
-                            <Card title="客户类型分布">
-                                <div ref={chartRef} style={{ height: 300 }}></div>
-                            </Card>
-                        </Col>
-                        <Col span={12}>
-                            <Card title="行业分布">
-                                <div style={{ padding: '20px 0' }}>
-                                    <div style={{ marginBottom: 12 }}>互联网: 50 家</div>
-                                    <Progress percent={50} showInfo={false} />
-                                    <div style={{ margin: '12px 0' }}>金融: 35 家</div>
-                                    <Progress percent={35} showInfo={false} />
-                                    <div style={{ margin: '12px 0' }}>制造业: 25 家</div>
-                                    <Progress percent={25} showInfo={false} />
-                                    <div style={{ margin: '12px 0' }}>其他: 46 家</div>
-                                    <Progress percent={46} showInfo={false} />
-                                </div>
-                            </Card>
-                        </Col>
-                    </Row>
-                </div>
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'page-header' },
+                    React.createElement('div', { className: 'page-title' }, '数据统计')
+                ),
+                React.createElement('div', { className: 'stat-grid' },
+                    React.createElement('div', { className: 'stat-card' },
+                        React.createElement('div', { className: 'stat-value' }, '156'),
+                        React.createElement('div', { className: 'stat-label' }, '客户总数')
+                    ),
+                    React.createElement('div', { className: 'stat-card' },
+                        React.createElement('div', { className: 'stat-value' }, '45'),
+                        React.createElement('div', { className: 'stat-label' }, '话术总数')
+                    ),
+                    React.createElement('div', { className: 'stat-card' },
+                        React.createElement('div', { className: 'stat-value' }, '320'),
+                        React.createElement('div', { className: 'stat-label' }, '对话次数')
+                    ),
+                    React.createElement('div', { className: 'stat-card' },
+                        React.createElement('div', { className: 'stat-value' }, '8.5'),
+                        React.createElement('div', { className: 'stat-label' }, '平均评分')
+                    )
+                ),
+                React.createElement('div', { className: 'row' },
+                    React.createElement('div', { className: 'col' },
+                        React.createElement('div', { className: 'card' },
+                            React.createElement('div', { className: 'card-title' }, '客户类型分布'),
+                            React.createElement('div', { ref: chartRef, className: 'chart-container' })
+                        )
+                    ),
+                    React.createElement('div', { className: 'col' },
+                        React.createElement('div', { className: 'card' },
+                            React.createElement('div', { className: 'card-title' }, '行业分布'),
+                            React.createElement('div', { style: { padding: '20px 0' } },
+                                React.createElement('div', null, '互联网: 50家'),
+                                React.createElement('div', { className: 'progress-bar' },
+                                    React.createElement('div', { className: 'progress-fill', style: { width: '50%' } })
+                                ),
+                                React.createElement('div', { style: { marginTop: '12px' } }, '金融: 35家'),
+                                React.createElement('div', { className: 'progress-bar' },
+                                    React.createElement('div', { className: 'progress-fill', style: { width: '35%' } })
+                                ),
+                                React.createElement('div', { style: { marginTop: '12px' } }, '制造业: 25家'),
+                                React.createElement('div', { className: 'progress-bar' },
+                                    React.createElement('div', { className: 'progress-fill', style: { width: '25%' } })
+                                )
+                            )
+                        )
+                    )
+                )
             );
         }
         
         // 文档处理页面
         function DocumentsPage() {
-            const [fileList, setFileList] = useState([]);
-            
-            const uploadProps = {
-                beforeUpload: (file) => {
-                    const isValid = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
-                        || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                        || file.type === 'application/pdf';
-                    if (!isValid) {
-                        message.error('仅支持 Excel、Word、PDF 格式');
-                        return false;
-                    }
-                    message.success('文件上传成功，正在解析...');
-                    return false;
-                },
-                fileList,
-                onChange: (info) => setFileList(info.fileList)
-            };
-            
-            return (
-                <div>
-                    <div className="page-header">
-                        <div className="page-title">文档处理</div>
-                    </div>
-                    
-                    <Card style={{ marginBottom: 24 }}>
-                        <Upload.Dragger {...uploadProps} accept=".xlsx,.docx,.pdf">
-                            <div style={{ padding: '40px 0' }}>
-                                <div style={{ fontSize: 16, color: '#666' }}>
-                                    点击或拖拽文件到此区域上传
-                                </div>
-                                <div style={{ marginTop: 8, color: '#999' }}>
-                                    支持 Excel (.xlsx) / Word (.docx) / PDF 格式
-                                </div>
-                            </div>
-                        </Upload.Dragger>
-                    </Card>
-                    
-                    <Card title="上传历史">
-                        <Table
-                            columns={[
-                                { title: '文件名', dataIndex: 'name', key: 'name' },
-                                { title: '上传时间', dataIndex: 'time', key: 'time' },
-                                { title: '处理结果', dataIndex: 'result', key: 'result' },
-                                { title: '状态', dataIndex: 'status', key: 'status', render: () => <Tag color="green">完成</Tag> }
-                            ]}
-                            dataSource={[
-                                { key: '1', name: '客户列表.xlsx', time: '2024-03-16 15:30', result: '提取 15 条客户' },
-                                { key: '2', name: '话术文档.docx', time: '2024-03-15 14:20', result: '导入 8 条话术' }
-                            ]}
-                            pagination={false}
-                        />
-                    </Card>
-                </div>
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'page-header' },
+                    React.createElement('div', { className: 'page-title' }, '文档处理')
+                ),
+                React.createElement('div', { className: 'card' },
+                    React.createElement('div', { className: 'upload-area' },
+                        React.createElement('div', { className: 'upload-text' },
+                            '点击或拖拽文件到此区域上传'
+                        ),
+                        React.createElement('div', { style: { marginTop: '8px', color: '#999' } },
+                            '支持 Excel / Word / PDF 格式'
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'card' },
+                    React.createElement('div', { className: 'card-title' }, '上传历史'),
+                    React.createElement('div', { className: 'table-wrapper' },
+                        React.createElement('table', null,
+                            React.createElement('thead', null,
+                                React.createElement('tr', null,
+                                    React.createElement('th', null, '文件名'),
+                                    React.createElement('th', null, '上传时间'),
+                                    React.createElement('th', null, '处理结果'),
+                                    React.createElement('th', null, '状态')
+                                )
+                            ),
+                            React.createElement('tbody', null,
+                                React.createElement('tr', null,
+                                    React.createElement('td', null, '客户列表.xlsx'),
+                                    React.createElement('td', null, '2026-03-16 15:30'),
+                                    React.createElement('td', null, '提取 15 条客户'),
+                                    React.createElement('td', null, React.createElement('span', { className: 'tag tag-success' }, '完成'))
+                                )
+                            )
+                        )
+                    )
+                )
+            );
+        }
+        
+        // 弹窗组件
+        function Modal({ title, children, onClose }) {
+            return React.createElement('div', { className: 'modal-overlay', onClick: onClose },
+                React.createElement('div', { className: 'modal-content', onClick: (e) => e.stopPropagation() },
+                    React.createElement('div', { className: 'modal-header' },
+                        React.createElement('div', { className: 'modal-title' }, title),
+                        React.createElement('button', { className: 'modal-close', onClick: onClose }, '×')
+                    ),
+                    children
+                )
             );
         }
         
         // 渲染应用
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
     </script>
 </body>
 </html>

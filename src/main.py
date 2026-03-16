@@ -243,7 +243,7 @@ openai_handler = OpenAIChatHandler(service)
 
 
 # 版本信息
-VERSION_CONFIG_PATH = os.path.join(os.getenv("COZE_WORKSPACE_PATH", "/workspace/projects"), "config/version.json")
+VERSION_CONFIG_PATH = os.path.join(os.getenv("COZE_WORKSPACE_PATH", "/workspace/projects"), "assets/version.json")
 
 def get_version_info():
     """获取版本信息"""
