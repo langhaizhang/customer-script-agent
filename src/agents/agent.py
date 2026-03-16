@@ -88,6 +88,15 @@ from tools.conversation_tool import (
     update_conversation
 )
 
+# 导入提示词管理工具
+from tools.prompt_management_tool import (
+    get_system_prompt,
+    update_system_prompt,
+    reset_system_prompt,
+    get_prompt_templates,
+    apply_prompt_template
+)
+
 LLM_CONFIG = "config/agent_llm_config.json"
 
 # 默认保留最近 20 轮对话 (40 条消息)
@@ -185,7 +194,14 @@ def build_agent(ctx=None):
         query_conversations,
         get_conversation,
         analyze_customer_conversations,
-        update_conversation
+        update_conversation,
+        
+        # 提示词管理工具
+        get_system_prompt,
+        update_system_prompt,
+        reset_system_prompt,
+        get_prompt_templates,
+        apply_prompt_template
     ]
 
     # 创建 Agent
