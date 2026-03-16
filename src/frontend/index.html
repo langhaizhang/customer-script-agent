@@ -88,8 +88,8 @@
     <script src="https://unpkg.com/echarts@5/dist/echarts.min.js"></script>
     <script>
         const { useState, useEffect, useRef } = React;
-        const VERSION = "1.2.0";
-        const RELEASE_TIME = "2026-03-16 18:00:00";
+        const VERSION = "1.3.0";
+        const RELEASE_TIME = "2026-03-16 19:00:00";
         const API_BASE = window.location.origin;
 
         // 产品列表（默认三个产品）
@@ -132,6 +132,7 @@
                 { key: 'customers', label: '客户管理' },
                 { key: 'smart_input', label: '智能录入' },
                 { key: 'scripts', label: '话术库' },
+                { key: 'conversations', label: '对话记录' },
                 { key: 'statistics', label: '数据统计' }
             ];
 
@@ -143,6 +144,7 @@
                     case 'customers': return React.createElement(CustomersPage, { currentProduct });
                     case 'smart_input': return React.createElement(SmartInputPage, { currentProduct });
                     case 'scripts': return React.createElement(ScriptsPage, { currentProduct });
+                    case 'conversations': return React.createElement(ConversationsPage, { currentProduct });
                     case 'statistics': return React.createElement(StatisticsPage, { currentProduct });
                     default: return React.createElement(ChatPage, { currentProduct });
                 }
@@ -492,22 +494,36 @@
         function ScriptsPage({ currentProduct }) {
             const [scripts, setScripts] = useState([]);
             const [modalVisible, setModalVisible] = useState(false);
+            const [aiModalVisible, setAiModalVisible] = useState(false);
+            const [category, setCategory] = useState('');
 
             return React.createElement('div', null,
                 React.createElement('div', { className: 'page-header' },
                     React.createElement('div', { className: 'page-title' }, '话术库'),
-                    React.createElement('button', { className: 'btn btn-primary', onClick: () => setModalVisible(true) }, '添加话术')
-                ),
-                React.createElement('div', { className: 'card', style: { marginBottom: '16px' } },
-                    React.createElement('div', { className: 'card-title' }, 'AI话术生成'),
-                    React.createElement('div', { className: 'row' },
-                        React.createElement('input', { className: 'form-input', placeholder: '输入场景描述，如：首次联系互联网行业潜在客户', style: { flex: 1 } }),
-                        React.createElement('button', { className: 'btn btn-primary' }, '生成话术')
+                    React.createElement('div', null,
+                        React.createElement('button', { 
+                            className: 'btn btn-primary', 
+                            style: { marginRight: '8px' },
+                            onClick: () => setAiModalVisible(true)
+                        }, '🤖 AI生成话术'),
+                        React.createElement('button', { className: 'btn btn-default', onClick: () => setModalVisible(true) }, '手动添加')
                     )
                 ),
+                
+                // AI生成提示
+                React.createElement('div', { className: 'card', style: { marginBottom: '16px', background: '#e6f7ff', border: '1px solid #91d5ff' } },
+                    React.createElement('div', { style: { fontSize: '13px', color: '#666' } },
+                        '🤖 AI话术生成：输入场景和需求，系统将基于产品资料库自动生成专业的销售话术。'
+                    )
+                ),
+
                 React.createElement('div', { className: 'card' },
                     React.createElement('div', { className: 'filter-bar' },
-                        React.createElement('select', { className: 'filter-select' },
+                        React.createElement('select', { 
+                            className: 'filter-select',
+                            value: category,
+                            onChange: (e) => setCategory(e.target.value)
+                        },
                             React.createElement('option', { value: '' }, '全部分类'),
                             Object.entries(SCRIPT_CATEGORIES).map(([k, v]) =>
                                 React.createElement('option', { key: k, value: k }, v)
@@ -519,6 +535,7 @@
                             React.createElement('tr', null,
                                 React.createElement('th', null, '标题'),
                                 React.createElement('th', null, '分类'),
+                                React.createElement('th', null, '来源'),
                                 React.createElement('th', null, '评分'),
                                 React.createElement('th', null, '使用次数'),
                                 React.createElement('th', null, '操作')
@@ -527,16 +544,163 @@
                         React.createElement('tbody', null,
                             scripts.length === 0 ?
                                 React.createElement('tr', null,
-                                    React.createElement('td', { colSpan: 5, style: { textAlign: 'center', color: '#999' } }, '暂无数据')
+                                    React.createElement('td', { colSpan: 6, style: { textAlign: 'center', color: '#999' } }, '暂无话术，点击"AI生成话术"开始创建')
                                 ) : null
                         )
                     )
                 ),
+                
                 modalVisible && React.createElement(Modal, {
-                    title: '添加话术',
+                    title: '手动添加话术',
                     onClose: () => setModalVisible(false),
-                    children: React.createElement(ScriptForm, { onClose: () => setModalVisible(false) })
+                    children: React.createElement(ScriptForm, { 
+                        currentProduct,
+                        onClose: () => setModalVisible(false) 
+                    })
+                }),
+                
+                aiModalVisible && React.createElement(Modal, {
+                    title: '🤖 AI生成话术',
+                    onClose: () => setAiModalVisible(false),
+                    children: React.createElement(AiScriptForm, { 
+                        currentProduct,
+                        onClose: () => setAiModalVisible(false) 
+                    })
                 })
+            );
+        }
+
+        function AiScriptForm({ currentProduct, onClose }) {
+            const [category, setCategory] = useState('opening');
+            const [scenario, setScenario] = useState('');
+            const [industry, setIndustry] = useState('');
+            const [customerType, setCustomerType] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [result, setResult] = useState('');
+
+            const handleGenerate = async () => {
+                if (!scenario.trim()) {
+                    alert('请输入使用场景');
+                    return;
+                }
+                
+                setLoading(true);
+                setResult('');
+                
+                try {
+                    const prompt = `请为产品ID ${currentProduct} 生成销售话术：
+话术分类：${category}
+使用场景：${scenario}
+目标行业：${industry || '不限'}
+客户类型：${customerType || '不限'}
+请保存到话术库。`;
+
+                    const response = await fetch(`${API_BASE}/stream_run`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'query',
+                            session_id: 'gen-script-' + Date.now(),
+                            content: { query: { prompt: [{ type: 'text', content: { text: prompt } }] } }
+                        })
+                    });
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let fullResponse = '';
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        const chunk = decoder.decode(value);
+                        const lines = chunk.split('\n');
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                try {
+                                    const data = JSON.parse(line.slice(6));
+                                    if (data.type === 'answer' && data.content?.answer) {
+                                        fullResponse += data.content.answer;
+                                        setResult(fullResponse);
+                                    }
+                                } catch (e) {}
+                            }
+                        }
+                    }
+                } catch (error) {
+                    setResult('❌ 生成失败：' + error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '话术分类 *'),
+                    React.createElement('select', { 
+                        className: 'form-select',
+                        value: category,
+                        onChange: (e) => setCategory(e.target.value)
+                    },
+                        Object.entries(SCRIPT_CATEGORIES).map(([k, v]) =>
+                            React.createElement('option', { key: k, value: k }, v)
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '使用场景 *'),
+                    React.createElement('input', { 
+                        className: 'form-input', 
+                        placeholder: '如：首次联系互联网行业潜在客户',
+                        value: scenario,
+                        onChange: (e) => setScenario(e.target.value)
+                    })
+                ),
+                React.createElement('div', { className: 'row' },
+                    React.createElement('div', { className: 'col' },
+                        React.createElement('div', { className: 'form-item' },
+                            React.createElement('label', { className: 'form-label' }, '目标行业'),
+                            React.createElement('input', { 
+                                className: 'form-input', 
+                                placeholder: '如：互联网、金融',
+                                value: industry,
+                                onChange: (e) => setIndustry(e.target.value)
+                            })
+                        )
+                    ),
+                    React.createElement('div', { className: 'col' },
+                        React.createElement('div', { className: 'form-item' },
+                            React.createElement('label', { className: 'form-label' }, '客户类型'),
+                            React.createElement('input', { 
+                                className: 'form-input', 
+                                placeholder: '如：潜在客户、意向客户',
+                                value: customerType,
+                                onChange: (e) => setCustomerType(e.target.value)
+                            })
+                        )
+                    )
+                ),
+                React.createElement('div', { style: { marginBottom: '16px' } },
+                    React.createElement('button', { 
+                        className: 'btn btn-primary',
+                        onClick: handleGenerate,
+                        disabled: loading,
+                        style: { width: '100%' }
+                    }, loading ? '🤖 AI生成中...' : '🤖 开始生成话术')
+                ),
+                result && React.createElement('div', { 
+                    style: { 
+                        background: '#fafafa', 
+                        padding: '16px', 
+                        borderRadius: '6px',
+                        whiteSpace: 'pre-wrap',
+                        lineHeight: '1.6',
+                        maxHeight: '300px',
+                        overflow: 'auto'
+                    } 
+                }, result),
+                React.createElement('div', { className: 'modal-footer' },
+                    React.createElement('button', { className: 'btn btn-default', onClick: onClose }, '关闭')
+                )
             );
         }
 
@@ -800,6 +964,268 @@
                             borderRadius: '6px'
                         } 
                     }, result)
+                )
+            );
+        }
+
+        // 对话记录页面
+        function ConversationsPage({ currentProduct }) {
+            const [conversations, setConversations] = useState([]);
+            const [modalVisible, setModalVisible] = useState(false);
+            const [conversationType, setConversationType] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            const conversationTypes = {
+                'phone': '电话',
+                'wechat': '微信',
+                'email': '邮件',
+                'face_to_face': '面谈',
+                'other': '其他'
+            };
+
+            const loadConversations = async () => {
+                setLoading(true);
+                try {
+                    const response = await fetch(`${API_BASE}/stream_run`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'query',
+                            session_id: 'conv-query-' + Date.now(),
+                            content: { query: { prompt: [{ type: 'text', content: { text: `请查询产品ID ${currentProduct} 的最近对话记录` } }] } }
+                        })
+                    });
+                    // 简化处理，实际应该解析响应
+                } catch (error) {
+                    console.error('加载对话记录失败:', error);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'page-header' },
+                    React.createElement('div', { className: 'page-title' }, '对话记录'),
+                    React.createElement('button', { className: 'btn btn-primary', onClick: () => setModalVisible(true) }, '记录新对话')
+                ),
+                
+                // 功能说明
+                React.createElement('div', { className: 'card', style: { marginBottom: '16px', background: '#f6ffed', border: '1px solid #b7eb8f' } },
+                    React.createElement('div', { style: { fontSize: '13px', color: '#666' } },
+                        '💬 记录与客户的每一次沟通，包括电话、微信、邮件等。支持对话分析，帮助您更好地了解客户需求。'
+                    )
+                ),
+
+                // 筛选器
+                React.createElement('div', { className: 'card' },
+                    React.createElement('div', { className: 'filter-bar' },
+                        React.createElement('select', { 
+                            className: 'filter-select',
+                            value: conversationType,
+                            onChange: (e) => setConversationType(e.target.value)
+                        },
+                            React.createElement('option', { value: '' }, '全部类型'),
+                            Object.entries(conversationTypes).map(([k, v]) =>
+                                React.createElement('option', { key: k, value: k }, v)
+                            )
+                        )
+                    ),
+                    
+                    // 对话列表
+                    conversations.length === 0 ?
+                        React.createElement('div', { className: 'empty' }, 
+                            '暂无对话记录\n\n点击"记录新对话"添加您与客户的沟通内容'
+                        ) :
+                        React.createElement('table', null,
+                            React.createElement('thead', null,
+                                React.createElement('tr', null,
+                                    React.createElement('th', null, '客户'),
+                                    React.createElement('th', null, '类型'),
+                                    React.createElement('th', null, '摘要'),
+                                    React.createElement('th', null, '情绪'),
+                                    React.createElement('th', null, '时间'),
+                                    React.createElement('th', null, '操作')
+                                )
+                            ),
+                            React.createElement('tbody', null,
+                                conversations.map(conv =>
+                                    React.createElement('tr', { key: conv.id },
+                                        React.createElement('td', null, conv.customer_name || '未知'),
+                                        React.createElement('td', null, 
+                                            React.createElement('span', { className: 'tag tag-blue' }, conversationTypes[conv.conversation_type] || conv.conversation_type)
+                                        ),
+                                        React.createElement('td', null, conv.summary || '-'),
+                                        React.createElement('td', null, 
+                                            conv.sentiment === 'positive' ? '😊 积极' :
+                                            conv.sentiment === 'negative' ? '😟 消极' :
+                                            conv.sentiment === 'neutral' ? '😐 中立' : '-'
+                                        ),
+                                        React.createElement('td', null, conv.created_at ? conv.created_at.substring(0, 10) : '-'),
+                                        React.createElement('td', null,
+                                            React.createElement('button', { className: 'btn btn-link' }, '详情'),
+                                            React.createElement('button', { className: 'btn btn-link' }, '分析')
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                ),
+
+                modalVisible && React.createElement(Modal, {
+                    title: '记录新对话',
+                    onClose: () => setModalVisible(false),
+                    children: React.createElement(ConversationForm, { 
+                        currentProduct,
+                        onClose: () => setModalVisible(false)
+                    })
+                })
+            );
+        }
+
+        function ConversationForm({ currentProduct, onClose }) {
+            const [customerId, setCustomerId] = useState('');
+            const [convType, setConvType] = useState('phone');
+            const [content, setContent] = useState('');
+            const [summary, setSummary] = useState('');
+            const [nextAction, setNextAction] = useState('');
+            const [sentiment, setSentiment] = useState('neutral');
+            const [loading, setLoading] = useState(false);
+
+            const handleSubmit = async () => {
+                if (!customerId || !content) {
+                    alert('请填写客户ID和对话内容');
+                    return;
+                }
+                
+                setLoading(true);
+                try {
+                    const prompt = `请保存对话记录：
+客户ID: ${customerId}
+产品ID: ${currentProduct}
+对话类型: ${convType}
+对话内容: ${content}
+摘要: ${summary}
+下一步行动: ${nextAction}
+客户情绪: ${sentiment}`;
+
+                    const response = await fetch(`${API_BASE}/stream_run`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'query',
+                            session_id: 'save-conv-' + Date.now(),
+                            content: { query: { prompt: [{ type: 'text', content: { text: prompt } }] } }
+                        })
+                    });
+                    
+                    onClose();
+                } catch (error) {
+                    alert('保存失败：' + error.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            return React.createElement('div', null,
+                React.createElement('div', { className: 'row' },
+                    React.createElement('div', { className: 'col' },
+                        React.createElement('div', { className: 'form-item' },
+                            React.createElement('label', { className: 'form-label' }, '客户ID'),
+                            React.createElement('input', { 
+                                className: 'form-input', 
+                                placeholder: '请输入客户ID',
+                                value: customerId,
+                                onChange: (e) => setCustomerId(e.target.value)
+                            })
+                        )
+                    ),
+                    React.createElement('div', { className: 'col' },
+                        React.createElement('div', { className: 'form-item' },
+                            React.createElement('label', { className: 'form-label' }, '对话类型'),
+                            React.createElement('select', { 
+                                className: 'form-select',
+                                value: convType,
+                                onChange: (e) => setConvType(e.target.value)
+                            },
+                                React.createElement('option', { value: 'phone' }, '电话'),
+                                React.createElement('option', { value: 'wechat' }, '微信'),
+                                React.createElement('option', { value: 'email' }, '邮件'),
+                                React.createElement('option', { value: 'face_to_face' }, '面谈'),
+                                React.createElement('option', { value: 'other' }, '其他')
+                            )
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '对话内容'),
+                    React.createElement('textarea', { 
+                        className: 'form-textarea', 
+                        placeholder: '请记录对话内容...',
+                        style: { minHeight: '120px' },
+                        value: content,
+                        onChange: (e) => setContent(e.target.value)
+                    })
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '对话摘要'),
+                    React.createElement('input', { 
+                        className: 'form-input', 
+                        placeholder: '简要概括本次对话要点',
+                        value: summary,
+                        onChange: (e) => setSummary(e.target.value)
+                    })
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '下一步行动'),
+                    React.createElement('input', { 
+                        className: 'form-input', 
+                        placeholder: '如：下周三跟进报价',
+                        value: nextAction,
+                        onChange: (e) => setNextAction(e.target.value)
+                    })
+                ),
+                React.createElement('div', { className: 'form-item' },
+                    React.createElement('label', { className: 'form-label' }, '客户情绪'),
+                    React.createElement('div', { style: { display: 'flex', gap: '12px' } },
+                        React.createElement('label', { style: { cursor: 'pointer' } },
+                            React.createElement('input', { 
+                                type: 'radio', 
+                                name: 'sentiment', 
+                                value: 'positive',
+                                checked: sentiment === 'positive',
+                                onChange: () => setSentiment('positive')
+                            }),
+                            ' 😊 积极'
+                        ),
+                        React.createElement('label', { style: { cursor: 'pointer' } },
+                            React.createElement('input', { 
+                                type: 'radio', 
+                                name: 'sentiment', 
+                                value: 'neutral',
+                                checked: sentiment === 'neutral',
+                                onChange: () => setSentiment('neutral')
+                            }),
+                            ' 😐 中立'
+                        ),
+                        React.createElement('label', { style: { cursor: 'pointer' } },
+                            React.createElement('input', { 
+                                type: 'radio', 
+                                name: 'sentiment', 
+                                value: 'negative',
+                                checked: sentiment === 'negative',
+                                onChange: () => setSentiment('negative')
+                            }),
+                            ' 😟 消极'
+                        )
+                    )
+                ),
+                React.createElement('div', { className: 'modal-footer' },
+                    React.createElement('button', { className: 'btn btn-default', onClick: onClose }, '取消'),
+                    React.createElement('button', { 
+                        className: 'btn btn-primary', 
+                        onClick: handleSubmit,
+                        disabled: loading
+                    }, loading ? '保存中...' : '保存')
                 )
             );
         }

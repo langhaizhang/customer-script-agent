@@ -72,6 +72,22 @@ from tools.smart_input_tool import (
     smart_add_customer
 )
 
+# 导入AI话术生成工具
+from tools.ai_script_generator import (
+    generate_script,
+    improve_script,
+    generate_script_variants
+)
+
+# 导入对话收集工具
+from tools.conversation_tool import (
+    save_conversation,
+    query_conversations,
+    get_conversation,
+    analyze_customer_conversations,
+    update_conversation
+)
+
 LLM_CONFIG = "config/agent_llm_config.json"
 
 # 默认保留最近 20 轮对话 (40 条消息)
@@ -157,7 +173,19 @@ def build_agent(ctx=None):
         # 智能录入工具
         parse_text_to_customer,
         parse_image_to_customer,
-        smart_add_customer
+        smart_add_customer,
+        
+        # AI话术生成工具
+        generate_script,
+        improve_script,
+        generate_script_variants,
+        
+        # 对话收集工具
+        save_conversation,
+        query_conversations,
+        get_conversation,
+        analyze_customer_conversations,
+        update_conversation
     ]
 
     # 创建 Agent
